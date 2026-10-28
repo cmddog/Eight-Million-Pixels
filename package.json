@@ -1,33 +1,35 @@
 {
-  "name": "rw-art-community-bot",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "scripts": {
-    "start": "tsx --env-file=.env src/index.ts",
-    "start-test": "tsx --env-file=.env.test src/index.ts",
-    "deploy": "tsx --env-file=.env deploy-commands.ts",
-    "deploy-test": "tsx --env-file=.env.test deploy-commands.ts"
-  },
-  "type": "module",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "better-sqlite3": "^13.0.3",
-    "discord.js": "^14.27.0",
-    "dotenv": "^18.0.9",
-    "drizzle-orm": "^0.45.4",
-    "jiti": "^2.7.0",
-    "prettier": "^3.9.10"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^26.6.5",
-    "drizzle-kit": "^0.31.11",
-    "eslint": "^10.13.0",
-    "globals": "^17.13.0",
-    "tsx": "^4.23.15"
-  }
+    "name": "rw-art-community-bot",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "scripts": {
+        "start": "tsx --env-file=.env src/index.ts",
+        "start:test": "tsx --env-file=.env.test src/index.ts",
+        "start:prod": "tsx src/index.ts",
+        "deploy": "tsx --env-file=.env deploy-commands.ts",
+        "deploy:test": "tsx --env-file=.env.test deploy-commands.ts",
+        "db:push": "drizzle-kit push"
+    },
+    "type": "module",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "better-sqlite3": "^13.0.3",
+        "discord.js": "^14.27.0",
+        "dotenv": "^18.0.9",
+        "drizzle-orm": "^0.45.4",
+        "jiti": "^2.7.0",
+        "prettier": "^3.9.10"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/better-sqlite3": "^9.6.0",
+        "@types/node": "^26.6.5",
+        "drizzle-kit": "^0.31.11",
+        "eslint": "^10.13.0",
+        "globals": "^17.13.0",
+        "tsx": "^4.23.15"
+    }
 }

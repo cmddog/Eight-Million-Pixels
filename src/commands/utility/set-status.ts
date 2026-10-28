@@ -8,8 +8,8 @@ import {
 export const data = new SlashCommandBuilder()
     .setName('set-status')
     .setDescription("Sets the bot's status message")
-    .addStringOption((option) =>
-        option
+    .addStringOption((o) =>
+        o
             .setName('content')
             .setDescription('The status message')
             .setRequired(true),
@@ -26,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         status: 'online',
     });
 
-    await interaction.reply({
+    return interaction.reply({
         content: 'Status set.',
         flags: MessageFlags.Ephemeral,
     });
