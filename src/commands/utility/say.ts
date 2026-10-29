@@ -75,7 +75,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }),
     });
 
-    await log(
+    void log(
         new EmbedBuilder()
             .setAuthor({
                 name: interaction.user.username,

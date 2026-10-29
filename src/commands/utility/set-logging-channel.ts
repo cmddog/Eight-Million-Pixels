@@ -5,7 +5,7 @@ import {
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from 'discord.js';
-import { db } from '../../db/index.js';
+import { db } from '../../db/client.js';
 import { loggingChannel } from '../../db/schema.js';
 
 export const data = new SlashCommandBuilder()

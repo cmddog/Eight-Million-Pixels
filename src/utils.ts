@@ -1,5 +1,5 @@
 import type { Command } from './types.js';
-import { db } from './db/index.js';
+import { db } from './db/client.js';
 import { loggingChannel } from './db/schema.js';
 import {
     type ActionRowBuilder,

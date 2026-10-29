@@ -13,7 +13,7 @@ import {
     SlashCommandBuilder,
     TextDisplayBuilder,
 } from 'discord.js';
-import { db } from '../../db/index.js';
+import { db } from '../../db/client.js';
 import { triggers } from '../../db/schema.js';
 import { eq, like, or } from 'drizzle-orm';
 
