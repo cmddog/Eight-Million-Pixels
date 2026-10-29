@@ -19,7 +19,7 @@ interface Command {
     autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
 
-export type AccentColor = 'error' | 'primary' | 'warn';
+export type AccentColor = 'error' | 'primary';
 
 interface ContainerOptions {
     text?: string;

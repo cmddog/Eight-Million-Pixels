@@ -456,13 +456,12 @@ async function handleUnsubscribe(interaction: ChatInputCommandInteraction) {
 
 async function handleEdit(interaction: ChatInputCommandInteraction) {
     if (!verifyAdmin(interaction)) return;
+    await interaction.deferReply();
 
     const name = interaction.options.getString('name', true).trim();
     const property = interaction.options.getString('property', true) as
         'name' | 'description';
     const newValue = interaction.options.getString('new-value', true).trim();
-
-    await interaction.deferReply();
 
     const trigger = await db.query.triggers.findFirst({
         where: eq(triggers.name, name),
@@ -531,10 +530,9 @@ async function handleEdit(interaction: ChatInputCommandInteraction) {
 
 async function handleDelete(interaction: ChatInputCommandInteraction) {
     if (!verifyAdmin(interaction)) return;
+    await interaction.deferReply();
 
     const name = interaction.options.getString('name', true);
-
-    await interaction.deferReply();
     const trigger = await db.query.triggers.findFirst({
         where: eq(triggers.name, name),
     });
@@ -591,7 +589,7 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
                 }),
             );
         } else {
-            btn.update(
+            return btn.update(
                 containerDisplay({ text: 'Interaction cancelled by user' }),
             );
         }
@@ -602,7 +600,52 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
     }
 }
 
-async function handleMerge(interaction: ChatInputCommandInteraction) {}
+async function handleMerge(interaction: ChatInputCommandInteraction) {
+    if (!verifyAdmin(interaction)) return;
+    await interaction.deferReply();
+
+    const sourceName = interaction.options.getString('source-name', true);
+    const targetName = interaction.options.getString('target-name', true);
+
+    const source = await db.query.triggers.findFirst({
+        where: eq(triggers.name, sourceName),
+    });
+    if (!source)
+        return interaction.editReply(
+            containerDisplay({
+                text: `There is no trigger called \`${sourceName}\``,
+                color: 'error',
+            }),
+        );
+
+    const target = await db.query.triggers.findFirst({
+        where: eq(triggers.name, targetName),
+    });
+    if (!target)
+        return interaction.editReply(
+            containerDisplay({
+                text: `There is no trigger called \`${targetName}\``,
+                color: 'error',
+            }),
+        );
+
+    const sourceSubs = source.subscribers.split(',');
+    const newTargetSubs = [
+        ...new Set(sourceSubs.concat(target.subscribers.split(','))),
+    ];
+
+    await db
+        .update(triggers)
+        .set({ subscribers: newTargetSubs.join(',') })
+        .where(eq(triggers.name, targetName));
+    await db.delete(triggers).where(eq(triggers.name, sourceName));
+    return interaction.editReply(
+        containerDisplay({
+            text: `Transferred unique subscribers to \`${targetName}\` and deleted \`${sourceName}\``,
+            color: 'primary',
+        }),
+    );
+}
 
 async function handleGetUser(interaction: ChatInputCommandInteraction) {}
 
