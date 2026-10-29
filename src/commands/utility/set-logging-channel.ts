@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { db } from '../../db/client.js';
 import { loggingChannel } from '../../db/schema.js';
+import { containerDisplay } from '../../utils.js';
 
 export const data = new SlashCommandBuilder()
     .setName('set-logging-channel')
@@ -14,8 +15,9 @@ export const data = new SlashCommandBuilder()
     .addChannelOption((o) =>
         o
             .setName('channel')
-            .setDescription('The channel')
-            .addChannelTypes(ChannelType.GuildText),
+            .setDescription('The channel to send logs in')
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
     );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -28,10 +30,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .permissionsFor(interaction.client.user)
             ?.has(PermissionFlagsBits.SendMessages)
     ) {
-        return interaction.reply({
-            content: "I don't have permission to send messages in that channel",
-            flags: MessageFlags.Ephemeral,
-        });
+        return interaction.reply(
+            containerDisplay(
+                {
+                    text: "🚫 I don't have permission to send messages in that channel",
+                    color: 'error',
+                },
+                MessageFlags.Ephemeral,
+            ),
+        );
     }
 
     await interaction.deferReply();
@@ -44,5 +51,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             set: { loggingChannelId: channel.id },
         });
 
-    return interaction.editReply(`Logging channel set to ${channel}`);
+    return interaction.editReply(
+        containerDisplay({
+            text: `Logging channel set to ${channel}`,
+            color: 'primary',
+        }),
+    );
 }

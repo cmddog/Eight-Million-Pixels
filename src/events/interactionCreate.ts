@@ -1,10 +1,5 @@
-import {
-    Events,
-    type Interaction,
-    type InteractionReplyOptions,
-    MessageFlags,
-} from 'discord.js';
-import { isAutocompleteCommand } from '../utils.js';
+import { Events, type Interaction, MessageFlags } from 'discord.js';
+import { containerDisplay, isAutocompleteCommand } from '../utils.js';
 
 export const name = Events.InteractionCreate;
 
@@ -25,17 +20,20 @@ export async function execute(interaction: Interaction) {
             await command.execute(interaction);
         } catch (error) {
             console.error(error);
-            const errorResponse = {
-                content: 'There was an error while executing this command.',
-                flags: MessageFlags.Ephemeral,
-            } as InteractionReplyOptions;
+            const errorResponse = containerDisplay(
+                {
+                    text: 'There was an error while executing this command.',
+                    color: 'error',
+                },
+                MessageFlags.Ephemeral,
+            );
             if (interaction.replied || interaction.deferred) {
                 await interaction.followUp(errorResponse);
             } else {
                 await interaction.reply(errorResponse);
             }
         }
-    } else {
+    } else if (interaction.isAutocomplete()) {
         try {
             if (isAutocompleteCommand(command)) {
                 await command.autocomplete(interaction);

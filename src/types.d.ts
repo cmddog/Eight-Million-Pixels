@@ -2,6 +2,8 @@ import {
     type AutocompleteInteraction,
     type ChatInputCommandInteraction,
     Collection,
+    type InteractionEditReplyOptions,
+    type InteractionReplyOptions,
     SlashCommandBuilder,
 } from 'discord.js';
 
@@ -16,3 +18,15 @@ interface Command {
     execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
     autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
+
+export type AccentColor = 'error' | 'primary' | 'warn';
+
+interface ContainerOptions {
+    text?: string;
+    color?: AccentColor;
+}
+
+type PartialMessageOptions = Pick<
+    InteractionReplyOptions & InteractionEditReplyOptions,
+    'components' | 'flags'
+>;

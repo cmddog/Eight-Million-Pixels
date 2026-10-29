@@ -1,16 +1,22 @@
 import {
-    ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
     ChannelType,
     type ChatInputCommandInteraction,
-    EmbedBuilder,
+    ContainerBuilder,
     type GuildTextBasedChannel,
     MessageFlags,
     PermissionFlagsBits,
+    SectionBuilder,
     SlashCommandBuilder,
+    TextDisplayBuilder,
 } from 'discord.js';
-import { log } from '../../utils.js';
+import {
+    buildContainer,
+    buildTextDisplay,
+    containerDisplay,
+    log,
+} from '../../utils.js';
 
 export const data = new SlashCommandBuilder()
     .setName('say')
@@ -50,10 +56,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .permissionsFor(interaction.client.user)
             ?.has(PermissionFlagsBits.SendMessages)
     ) {
-        return interaction.reply({
-            content: `I don't have permission to send messages in ${channel}.`,
-            flags: MessageFlags.Ephemeral,
-        });
+        return interaction.reply(
+            containerDisplay(
+                {
+                    text: `I don't have permission to send messages in ${channel}`,
+                    color: 'error',
+                },
+                MessageFlags.Ephemeral,
+            ),
+        );
     }
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -63,7 +74,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             await channel.messages.fetch(replyToId);
         } catch {
             return interaction.editReply(
-                `No message with id \`${replyToId}\` found in ${channel}.`,
+                containerDisplay(
+                    {
+                        text: `No message with id \`${replyToId}\` found in ${channel}`,
+                        color: 'error',
+                    },
+                    MessageFlags.Ephemeral,
+                ),
             );
         }
     }
@@ -75,29 +92,42 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }),
     });
 
-    void log(
-        new EmbedBuilder()
-            .setAuthor({
-                name: interaction.user.username,
-                iconURL:
-                    interaction.user.avatarURL() ??
-                    'https://crouton.net/crouton.png',
-            })
-            .setTitle('Sent a Message as EMP')
-            .setURL(sent.url)
-            .setDescription(content),
-        interaction,
-    );
+    void log(interaction, [
+        new ContainerBuilder()
+            .addSectionComponents(
+                new SectionBuilder()
+                    .addTextDisplayComponents(
+                        new TextDisplayBuilder().setContent(
+                            '### Sent a Message as EMP',
+                        ),
+                    )
+                    .setButtonAccessory(
+                        new ButtonBuilder()
+                            .setURL(sent.url)
+                            .setLabel('Jump')
+                            .setStyle(ButtonStyle.Link),
+                    ),
+            )
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                    `${interaction.user} in ${interaction.channel}: ${content}`,
+                ),
+            ),
+    ]);
 
     return interaction.editReply({
-        content: 'Message sent',
         components: [
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder()
-                    .setLabel('Jump')
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(sent.url),
+            buildContainer({ color: 'primary' }).addSectionComponents(
+                new SectionBuilder()
+                    .addTextDisplayComponents(buildTextDisplay('Message sent'))
+                    .setButtonAccessory(
+                        new ButtonBuilder()
+                            .setLabel('Jump')
+                            .setStyle(ButtonStyle.Link)
+                            .setURL(sent.url),
+                    ),
             ),
         ],
+        flags: MessageFlags.IsComponentsV2,
     });
 }
