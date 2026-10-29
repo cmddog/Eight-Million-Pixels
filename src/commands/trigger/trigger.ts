@@ -206,7 +206,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
                     text:
                         'Name must only include letters and spaces, please try again.' +
                         (description
-                            ? ` In case you want to copy it, here is the description you wrote: \`${description}\``
+                            ? ` In case you want to copy it, here is the description you wrote: **${description}**`
                             : ''),
                     color: 'error',
                 },
@@ -239,7 +239,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
         await insertTrigger(name, description, interaction);
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully added and subscribed to new trigger \`${name}\``,
+                text: `Successfully added and subscribed to new trigger **${name}**`,
                 color: 'primary',
             }),
         );
@@ -247,7 +247,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
         if (exactMatch.subscribers.includes(interaction.user.id)) {
             return interaction.editReply(
                 containerDisplay({
-                    text: `You are already subscribed to \`${name}\``,
+                    text: `You are already subscribed to **${name}**`,
                     color: 'error',
                 }),
             );
@@ -256,7 +256,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
         await subscribeToTrigger(exactMatch, interaction.user.id);
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully subscribed to \`${name}\``,
+                text: `Successfully subscribed to **${name}**`,
                 color: 'primary',
             }),
         );
@@ -350,7 +350,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
                 await insertTrigger(name, description, interaction);
                 return btn.editReply(
                     containerDisplay({
-                        text: `Successfully added new trigger \`${name}\``,
+                        text: `Successfully added new trigger **${name}**`,
                         color: 'primary',
                     }),
                 );
@@ -363,7 +363,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
                 if (!toUpdate) {
                     return btn.editReply(
                         containerDisplay({
-                            text: `The trigger \`${value}\` no longer exists`,
+                            text: `The trigger **${value}** no longer exists`,
                             color: 'error',
                         }),
                     );
@@ -372,7 +372,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
                 if (toUpdate.subscribers.includes(interaction.user.id)) {
                     return btn.editReply(
                         containerDisplay({
-                            text: `You are already subscribed to \`${value}\``,
+                            text: `You are already subscribed to **${value}**`,
                             color: 'error',
                         }),
                     );
@@ -381,7 +381,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
                 await subscribeToTrigger(toUpdate, interaction.user.id);
                 return btn.editReply(
                     containerDisplay({
-                        text: `Successfully subscribed to \`${value}\``,
+                        text: `Successfully subscribed to **${value}**`,
                         color: 'primary',
                     }),
                 );
@@ -436,7 +436,7 @@ async function handleUnsubscribe(interaction: ChatInputCommandInteraction) {
 
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully unsubscribed from \`${name}\`. You were the last subscriber and the trigger has been deleted`,
+                text: `Successfully unsubscribed from **${name}**. You were the last subscriber and the trigger has been deleted`,
                 color: 'primary',
             }),
         );
@@ -447,7 +447,7 @@ async function handleUnsubscribe(interaction: ChatInputCommandInteraction) {
             .where(eq(triggers.name, name));
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully unsubscribed from \`${name}\``,
+                text: `Successfully unsubscribed from **${name}**`,
                 color: 'primary',
             }),
         );
@@ -495,7 +495,7 @@ async function handleEdit(interaction: ChatInputCommandInteraction) {
                 .where(eq(triggers.name, name));
             return interaction.editReply(
                 containerDisplay({
-                    text: `Name of trigger successfully changed from \`${name}\` to \`${newValue}\``,
+                    text: `Name of trigger successfully changed from **${name}** to **${newValue}**`,
                     color: 'primary',
                 }),
             );
@@ -515,7 +515,7 @@ async function handleEdit(interaction: ChatInputCommandInteraction) {
             return interaction.editReply({
                 components: [
                     buildContainer({
-                        text: `### Description of trigger \`${name}\` successfully changed`,
+                        text: `### Description of trigger **${name}** successfully changed`,
                         color: 'primary',
                     }).addTextDisplayComponents(
                         buildTextDisplay(`Before:\n> ${trigger.description}`),
@@ -551,7 +551,7 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
     ) => PartialMessageOptions = (confirmed: boolean) => ({
         components: [
             buildContainer({
-                text: `Are you sure you want to delete the trigger \`${name}\`? It currently has ${subscriberCount} ${subscriberCount === 1 ? 'subscriber' : 'subscriber'}.`,
+                text: `Are you sure you want to delete the trigger **${name}**? It currently has ${subscriberCount} ${subscriberCount === 1 ? 'subscriber' : 'subscriber'}.`,
                 color: 'error',
             }).addActionRowComponents(
                 new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -584,7 +584,7 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
             await db.delete(triggers).where(eq(triggers.name, name));
             return btn.followUp(
                 containerDisplay({
-                    text: `Successfully deleted trigger \`${name}\``,
+                    text: `Successfully deleted trigger **${name}**`,
                     color: 'primary',
                 }),
             );
@@ -624,7 +624,7 @@ async function handleMerge(interaction: ChatInputCommandInteraction) {
     if (!source)
         return interaction.editReply(
             containerDisplay({
-                text: `There is no trigger called \`${sourceName}\``,
+                text: `There is no trigger called **${sourceName}**`,
                 color: 'error',
             }),
         );
@@ -635,7 +635,7 @@ async function handleMerge(interaction: ChatInputCommandInteraction) {
     if (!target)
         return interaction.editReply(
             containerDisplay({
-                text: `There is no trigger called \`${targetName}\``,
+                text: `There is no trigger called **${targetName}**`,
                 color: 'error',
             }),
         );
@@ -652,7 +652,7 @@ async function handleMerge(interaction: ChatInputCommandInteraction) {
     await db.delete(triggers).where(eq(triggers.name, sourceName));
     return interaction.editReply(
         containerDisplay({
-            text: `Transferred unique subscribers to \`${targetName}\` and deleted \`${sourceName}\``,
+            text: `Transferred unique subscribers to **${targetName}** and deleted **${sourceName}**`,
             color: 'primary',
         }),
     );
