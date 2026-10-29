@@ -1,4 +1,12 @@
 import type { Command } from './types.js';
+import { db } from './db/index.js';
+import { loggingChannel } from './db/schema.js';
+import {
+    type ActionRowBuilder,
+    type ButtonBuilder,
+    type ChatInputCommandInteraction,
+    EmbedBuilder,
+} from 'discord.js';
 
 export function isCommand(value: unknown): value is Command {
     return (
@@ -13,4 +21,24 @@ export function isAutocompleteCommand(
     cmd: Command,
 ): cmd is Command & Required<Pick<Command, 'autocomplete'>> {
     return typeof cmd.autocomplete === 'function';
+}
+
+export async function log(
+    embeds: EmbedBuilder,
+    interaction: ChatInputCommandInteraction,
+    actions?: ActionRowBuilder<ButtonBuilder>,
+) {
+    const [row] = await db
+        .select({ channelId: loggingChannel.loggingChannelId })
+        .from(loggingChannel);
+
+    if (!row) return;
+
+    const channel = await interaction.guild?.channels.fetch(row.channelId);
+    if (!channel?.isTextBased()) return;
+
+    await channel.send({
+        embeds: [embeds],
+        components: actions ? [actions] : [],
+    });
 }

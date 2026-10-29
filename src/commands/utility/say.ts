@@ -4,11 +4,13 @@ import {
     ButtonStyle,
     ChannelType,
     type ChatInputCommandInteraction,
+    EmbedBuilder,
     type GuildTextBasedChannel,
     MessageFlags,
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from 'discord.js';
+import { log } from '../../utils.js';
 
 export const data = new SlashCommandBuilder()
     .setName('say')
@@ -72,6 +74,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             reply: { messageReference: replyToId, failIfNotExists: true },
         }),
     });
+
+    await log(
+        new EmbedBuilder()
+            .setAuthor({
+                name: interaction.user.username,
+                iconURL:
+                    interaction.user.avatarURL() ??
+                    'https://crouton.net/crouton.png',
+            })
+            .setTitle('Sent a Message as EMP')
+            .setURL(sent.url)
+            .setDescription(content),
+        interaction,
+    );
 
     return interaction.editReply({
         content: 'Message sent',
