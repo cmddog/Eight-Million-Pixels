@@ -14,7 +14,7 @@ import {
     TextDisplayBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { triggers } from '../../db/schema.js';
+import { pseudonyms, triggers } from '../../db/schema.js';
 import { eq, like, or } from 'drizzle-orm';
 import {
     buildContainer,
@@ -602,10 +602,21 @@ async function handleDelete(interaction: ChatInputCommandInteraction) {
 
 async function handleMerge(interaction: ChatInputCommandInteraction) {
     if (!verifyAdmin(interaction)) return;
-    await interaction.deferReply();
 
     const sourceName = interaction.options.getString('source-name', true);
     const targetName = interaction.options.getString('target-name', true);
+
+    if (sourceName === targetName)
+        return interaction.reply(
+            containerDisplay(
+                {
+                    text: 'Source and target cannot be the same',
+                    color: 'error',
+                },
+                MessageFlags.Ephemeral,
+            ),
+        );
+    await interaction.deferReply();
 
     const source = await db.query.triggers.findFirst({
         where: eq(triggers.name, sourceName),
@@ -647,7 +658,29 @@ async function handleMerge(interaction: ChatInputCommandInteraction) {
     );
 }
 
-async function handleGetUser(interaction: ChatInputCommandInteraction) {}
+async function handleGetUser(interaction: ChatInputCommandInteraction) {
+    if (!verifyAdmin(interaction)) return;
+    await interaction.deferReply();
+
+    const pseudonym = interaction.options.getString('pseudonym', true);
+
+    const row = await db.query.pseudonyms.findFirst({
+        where: eq(pseudonyms.pseudonym, pseudonym),
+    });
+    if (!row)
+        return interaction.editReply(
+            containerDisplay({
+                text: `There is no user with the pseudonym **${pseudonym}**`,
+                color: 'error',
+            }),
+        );
+
+    return interaction.editReply(
+        containerDisplay({
+            text: `The user with the pseudonym **${pseudonym}** is <@${row.userId}>`,
+        }),
+    );
+}
 
 async function handleList(interaction: ChatInputCommandInteraction) {}
 
