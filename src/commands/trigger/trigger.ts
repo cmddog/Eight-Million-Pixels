@@ -8,7 +8,6 @@ import {
     ContainerBuilder,
     MessageFlags,
     SectionBuilder,
-    SeparatorBuilder,
     SeparatorSpacingSize,
     SlashCommandBuilder,
     TextDisplayBuilder,
@@ -18,19 +17,18 @@ import { triggers } from '../../db/schema.js';
 import { eq, like, or } from 'drizzle-orm';
 
 export const data = new SlashCommandBuilder()
+    .setName('trigger')
+    .setDescription('Manage triggers')
     .addSubcommand((sub) =>
         sub
             .setName('subscribe')
             .setDescription(
-                "Subscribe to a trigger or add a new one if it doesn't exist yet. Name must be limited to letters and spaces",
+                'Subscribe to a trigger or add a new one. Name must be limited to letters and spaces',
             )
             .addStringOption((o) =>
                 o
                     .setName('name')
-                    .setDescription(
-                        'The name of the trigger. (e.g. Spiders. Prefer using an easy to understand noun over ' +
-                            'something like Arachnophobia, so the list is easier to skim)',
-                    )
+                    .setDescription('The name of the trigger. (e.g. Spiders)')
                     .setMinLength(3)
                     .setMaxLength(20)
                     .setRequired(true),
@@ -39,8 +37,7 @@ export const data = new SlashCommandBuilder()
                 o
                     .setName('description')
                     .setDescription(
-                        'A more detailed description of the trigger. (e.g. Any imagery depicting ' +
-                            'spiders or spider-adjacent things)',
+                        'A more detailed description of the trigger. (e.g. Any imagery depicting spider-adjacent things)',
                     )
                     .setMinLength(10)
                     .setMaxLength(512),
@@ -133,7 +130,7 @@ export const data = new SlashCommandBuilder()
     );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     switch (interaction.options.getSubcommand()) {
         case 'subscribe':
             return handleSubscribe(interaction);
@@ -163,13 +160,12 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
 }
 
 async function handleSubscribe(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const name = interaction.options.getString('name', true);
     const description = interaction.options.getString('description');
 
     if (!/^[A-Za-z ]+$/.test(name)) {
         return interaction.editReply(
-            `⛔ Name must only include letters and spaces, please try again. In case you want to copy it, here is the description you wrote: \`${interaction.options.getString('description')}\``,
+            `🚫 Name must only include letters and spaces, please try again. In case you want to copy it, here is the description you wrote: \`${interaction.options.getString('description')}\``, // todo fix
         );
     }
 
@@ -185,7 +181,7 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
     if (matches.length === 0) {
         if (!description) {
             return interaction.editReply(
-                '⛔ You must provide a description to add a new trigger',
+                '🚫 You must provide a description to add a new trigger',
             );
         }
         await insertTrigger(name, description, interaction.user.id);
@@ -224,9 +220,6 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
             new TextDisplayBuilder().setContent(
                 'If any of these match what you were trying to add, consider subscribing to one of them instead:',
             ),
-            new SeparatorBuilder()
-                .setDivider(false)
-                .setSpacing(SeparatorSpacingSize.Large),
             ...sections,
         ];
         const actions = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -255,39 +248,73 @@ async function handleSubscribe(interaction: ChatInputCommandInteraction) {
 
             if (action === 'insert') {
                 if (!description) {
-                    return interaction.editReply(
-                        '⛔ You must provide a description to add a new trigger',
-                    );
+                    return interaction.editReply({
+                        components: [
+                            new TextDisplayBuilder().setContent(
+                                '🚫 You must provide a description to add a new trigger',
+                            ),
+                        ],
+                    });
                 }
-                await btn.update({ content: 'Inserting...', components: [] });
+                await btn.update({
+                    components: [
+                        new TextDisplayBuilder().setContent('Inserting...'),
+                    ],
+                });
                 await insertTrigger(name, description, interaction.user.id);
-                return interaction.editReply(
-                    `Successfully added new trigger \`${name}\``,
-                );
+                return interaction.editReply({
+                    components: [
+                        new TextDisplayBuilder().setContent(
+                            `Successfully added new trigger \`${name}\``,
+                        ),
+                    ],
+                });
             } else if (action === 'update') {
-                await btn.update({ content: 'Subscribing...', components: [] });
+                await btn.update({
+                    components: [
+                        new TextDisplayBuilder().setContent('Subscribing...'),
+                    ],
+                });
 
                 const toUpdate = await db.query.triggers.findFirst({
                     where: eq(triggers.name, value!),
                 });
                 if (!toUpdate) {
-                    return interaction.editReply(
-                        `The trigger \`${value}\` no longer exists`,
-                    );
+                    return interaction.editReply({
+                        components: [
+                            new TextDisplayBuilder().setContent(
+                                `The trigger \`${value}\` no longer exists`,
+                            ),
+                        ],
+                    });
                 }
 
                 if (toUpdate.subscribers.includes(interaction.user.id)) {
-                    return interaction.editReply(
-                        `You are already subscribed to \`${name}\``,
-                    );
+                    return interaction.editReply({
+                        components: [
+                            new TextDisplayBuilder().setContent(
+                                `You are already subscribed to \`${name}\``,
+                            ),
+                        ],
+                    });
                 }
 
                 await subscribeToTrigger(toUpdate, interaction.user.id);
-                return interaction.editReply(
-                    `Successfully subscribed to \`${value}\``,
-                );
+                return interaction.editReply({
+                    components: [
+                        new TextDisplayBuilder().setContent(
+                            `Successfully subscribed to \`${value}\``,
+                        ),
+                    ],
+                });
             } else {
-                return interaction.editReply('Interaction cancelled');
+                return interaction.editReply({
+                    components: [
+                        new TextDisplayBuilder().setContent(
+                            'Interaction cancelled',
+                        ),
+                    ],
+                });
             }
         } catch {
             return interaction.editReply({

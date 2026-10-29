@@ -14,7 +14,7 @@ export const data = new SlashCommandBuilder()
     .addChannelOption((o) =>
         o
             .setName('channel')
-            .setDescription('')
+            .setDescription('The channel')
             .addChannelTypes(ChannelType.GuildText),
     );
 

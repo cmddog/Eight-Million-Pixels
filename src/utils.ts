@@ -24,7 +24,7 @@ export function isAutocompleteCommand(
 }
 
 export async function log(
-    embeds: EmbedBuilder,
+    embed: EmbedBuilder,
     interaction: ChatInputCommandInteraction,
     actions?: ActionRowBuilder<ButtonBuilder>,
 ) {
@@ -38,7 +38,7 @@ export async function log(
     if (!channel?.isTextBased()) return;
 
     await channel.send({
-        embeds: [embeds],
+        embeds: [embed.setColor(0x7289da)],
         components: actions ? [actions] : [],
     });
 }
