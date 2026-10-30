@@ -9,8 +9,8 @@ import { loggingChannel, pseudonyms } from './db/schema.js';
 import {
     type ActionRowBuilder,
     type ButtonBuilder,
-    type ChatInputCommandInteraction,
     ContainerBuilder,
+    Guild,
     MessageFlags,
     TextDisplayBuilder,
 } from 'discord.js';
@@ -104,7 +104,7 @@ export function containerDisplay(
 }
 
 export async function log(
-    interaction: ChatInputCommandInteraction,
+    guild: Guild,
     components: (ContainerBuilder | ActionRowBuilder<ButtonBuilder>)[],
 ) {
     const [row] = await db
@@ -113,7 +113,7 @@ export async function log(
 
     if (!row) return;
 
-    const channel = await interaction.guild?.channels.fetch(row.channelId);
+    const channel = await guild.channels.fetch(row.channelId);
     if (!channel?.isTextBased()) return;
 
     await channel.send({

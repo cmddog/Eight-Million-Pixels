@@ -420,7 +420,7 @@ async function handleUnsubscribe(interaction: ChatInputCommandInteraction) {
     if (newSubs.length === 0) {
         await db.delete(triggers).where(eq(triggers.name, name));
 
-        void log(interaction, [
+        void log(interaction.guild!, [
             buildContainer({ text: '### Trigger Deleted' })
                 .addTextDisplayComponents(
                     buildTextDisplay(
@@ -815,7 +815,7 @@ async function insertTrigger(
         .values({ name, description, subscribers: interaction.user.id });
 
     const pseudonym = await getOrCreatePseudonym(interaction.user.id);
-    void log(interaction, [
+    void log(interaction.guild!, [
         buildContainer({ color: 'primary' })
             .addTextDisplayComponents(
                 buildTextDisplay('## Added New Trigger'),

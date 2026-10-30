@@ -92,7 +92,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }),
     });
 
-    void log(interaction, [
+    void log(interaction.guild!, [
         new ContainerBuilder()
             .addSectionComponents(
                 new SectionBuilder()
