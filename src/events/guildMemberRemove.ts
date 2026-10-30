@@ -23,7 +23,7 @@ export async function execute(member: GuildMember) {
                 buildContainer({ text: '### Trigger Deleted' })
                     .addTextDisplayComponents(
                         buildTextDisplay(
-                            'The last subscribe of this trigger left the server and it was deleted:',
+                            'The last subscriber of this trigger left the server and it was deleted:',
                         ),
                     )
                     .addSeparatorComponents(new SeparatorBuilder())

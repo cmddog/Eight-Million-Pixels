@@ -34,7 +34,7 @@ export async function handleUnsubscribe(
     const oldSubs = trigger.subscribers.split(',');
     const newSubs = oldSubs.filter((id) => id !== interaction.user.id);
 
-    if (oldSubs === newSubs)
+    if (oldSubs.length === newSubs.length)
         return interaction.editReply(
             containerDisplay({
                 text: `You already weren't subscribed to **${name}**`,

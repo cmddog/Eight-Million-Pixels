@@ -256,5 +256,5 @@ export function verifyAdmin(interaction: ChatInputCommandInteraction) {
             ),
         );
     }
-    return hasAdmin;
+    return !!hasAdmin;
 }

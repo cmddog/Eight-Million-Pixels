@@ -36,7 +36,7 @@ export async function handleDelete(interaction: ChatInputCommandInteraction) {
     ) => PartialMessageOptions = (confirmed: boolean) => ({
         components: [
             buildContainer({
-                text: `Are you sure you want to delete the trigger **${name}**? It currently has ${subscriberCount} ${subscriberCount === 1 ? 'subscriber' : 'subscriber'}.`,
+                text: `Are you sure you want to delete the trigger **${name}**? It currently has ${subscriberCount} ${subscriberCount === 1 ? 'subscriber' : 'subscribers'}.`,
                 color: 'error',
             }).addActionRowComponents(
                 new ActionRowBuilder<ButtonBuilder>().setComponents(

@@ -30,6 +30,16 @@ export async function handleEdit(interaction: ChatInputCommandInteraction) {
         );
     switch (property) {
         case 'name': {
+            const existing = await db.query.triggers.findFirst({
+                where: eq(triggers.name, newValue),
+            });
+            if (existing)
+                return interaction.editReply(
+                    containerDisplay({
+                        text: `There is already a trigger called **${newValue}**. Did you mean to use \`/trigger merge\`?`,
+                    }),
+                );
+
             if (!isValidName(newValue))
                 return interaction.editReply(
                     containerDisplay({
@@ -77,7 +87,7 @@ export async function handleEdit(interaction: ChatInputCommandInteraction) {
                         buildTextDisplay(`After:\n> ${newValue}`),
                     ),
                 ],
-                flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+                flags: MessageFlags.IsComponentsV2,
             });
         }
     }
