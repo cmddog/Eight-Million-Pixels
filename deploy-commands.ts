@@ -28,6 +28,7 @@ for (const folder of commandFolders) {
 
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
+        if (/[\/\\]handle/.test(filePath)) continue;
         const command = await import(pathToFileURL(filePath).href);
         if (isCommand(command)) {
             commands.push(command.data.toJSON());

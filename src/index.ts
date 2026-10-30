@@ -21,6 +21,7 @@ for (const folder of commandFolders) {
         .filter((file) => file.endsWith('.ts'));
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
+        if (/[\/\\]handle/.test(filePath)) continue;
         const command = await import(pathToFileURL(filePath).href);
         if (isCommand(command)) {
             client.commands.set(command.data.name, command);

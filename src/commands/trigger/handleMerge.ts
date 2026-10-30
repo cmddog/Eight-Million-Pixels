@@ -1,0 +1,64 @@
+import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+import { containerDisplay } from '../../utils.js';
+import { db } from '../../db/client.js';
+import { eq } from 'drizzle-orm';
+import { triggers } from '../../db/schema.js';
+import { verifyAdmin } from './trigger.js';
+
+export async function handleMerge(interaction: ChatInputCommandInteraction) {
+    if (!verifyAdmin(interaction)) return;
+
+    const sourceName = interaction.options.getString('source-name', true);
+    const targetName = interaction.options.getString('target-name', true);
+
+    if (sourceName === targetName)
+        return interaction.reply(
+            containerDisplay(
+                {
+                    text: 'Source and target cannot be the same',
+                    color: 'error',
+                },
+                MessageFlags.Ephemeral,
+            ),
+        );
+    await interaction.deferReply();
+
+    const source = await db.query.triggers.findFirst({
+        where: eq(triggers.name, sourceName),
+    });
+    if (!source)
+        return interaction.editReply(
+            containerDisplay({
+                text: `There is no trigger called **${sourceName}**`,
+                color: 'error',
+            }),
+        );
+
+    const target = await db.query.triggers.findFirst({
+        where: eq(triggers.name, targetName),
+    });
+    if (!target)
+        return interaction.editReply(
+            containerDisplay({
+                text: `There is no trigger called **${targetName}**`,
+                color: 'error',
+            }),
+        );
+
+    const sourceSubs = source.subscribers.split(',');
+    const newTargetSubs = [
+        ...new Set(sourceSubs.concat(target.subscribers.split(','))),
+    ];
+
+    await db
+        .update(triggers)
+        .set({ subscribers: newTargetSubs.join(',') })
+        .where(eq(triggers.name, targetName));
+    await db.delete(triggers).where(eq(triggers.name, sourceName));
+    return interaction.editReply(
+        containerDisplay({
+            text: `Transferred unique subscribers to **${targetName}** and deleted **${sourceName}**`,
+            color: 'primary',
+        }),
+    );
+}
