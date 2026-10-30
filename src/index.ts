@@ -4,7 +4,9 @@ import { isCommand } from './utils.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+});
 
 client.commands = new Collection();
 const __filename = fileURLToPath(import.meta.url);
