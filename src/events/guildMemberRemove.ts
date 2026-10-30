@@ -28,7 +28,7 @@ export async function execute(member: GuildMember) {
                     )
                     .addSeparatorComponents(new SeparatorBuilder())
                     .addTextDisplayComponents(
-                        buildTextDisplay(`**${name}**`),
+                        buildTextDisplay(`**${trigger.name}**`),
                         buildTextDisplay(`${trigger.description}`),
                     ),
             ]);

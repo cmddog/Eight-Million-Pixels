@@ -158,7 +158,14 @@ export const data = new SlashCommandBuilder()
             ),
     )
     .addSubcommand((sub) =>
-        sub.setName('list').setDescription('List all triggers'),
+        sub
+            .setName('list')
+            .setDescription('List all triggers')
+            .addBooleanOption((o) =>
+                o
+                    .setName('mine')
+                    .setDescription('Only show triggers you’re subscribed to'),
+            ),
     )
     .addSubcommand((sub) =>
         sub
@@ -417,11 +424,18 @@ async function handleUnsubscribe(interaction: ChatInputCommandInteraction) {
     const oldSubs = trigger.subscribers.split(',');
     const newSubs = oldSubs.filter((id) => id !== interaction.user.id);
 
+    if (oldSubs === newSubs)
+        return interaction.editReply(
+            containerDisplay({
+                text: `You already weren't subscribed to **${name}**`,
+            }),
+        );
+
     if (newSubs.length === 0) {
         await db.delete(triggers).where(eq(triggers.name, name));
 
         void log(interaction.guild!, [
-            buildContainer({ text: '### Trigger Deleted' })
+            buildContainer({ text: '## Trigger Deleted' })
                 .addTextDisplayComponents(
                     buildTextDisplay(
                         'This trigger lost its last subscriber and was deleted:',
@@ -686,10 +700,23 @@ async function handleList(interaction: ChatInputCommandInteraction) {
     const PAGE_SIZE = 5;
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const all = db.select().from(triggers).orderBy(triggers.name).all();
+    const mine = interaction.options.getBoolean('mine');
+    const all = mine
+        ? db
+              .select()
+              .from(triggers)
+              .where(like(triggers.subscribers, `%${interaction.user.id}%`))
+              .orderBy(triggers.name)
+              .all()
+        : db.select().from(triggers).orderBy(triggers.name).all();
+
     if (all.length === 0)
         return interaction.editReply(
-            containerDisplay({ text: 'No triggers yet' }),
+            containerDisplay({
+                text: mine
+                    ? "You aren't subscribed to any triggers yet"
+                    : 'No triggers yet',
+            }),
         );
 
     const pages = Math.ceil(all.length / PAGE_SIZE);
@@ -698,6 +725,8 @@ async function handleList(interaction: ChatInputCommandInteraction) {
     const buildContent = (p: number, disabled: boolean = false) => {
         const page = all.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE);
         const components = [];
+
+        if (mine) components.push(buildTextDisplay('## Your Triggers'));
 
         page.forEach((t) => {
             components.push(
@@ -778,8 +807,8 @@ async function handleHelp(interaction: ChatInputCommandInteraction) {
             }),
             buildContainer({
                 text:
-                    '**/trigger list**\n' +
-                    'Displays a paginated list of all current triggers',
+                    '**/trigger list** [mine]\n' +
+                    "Displays all triggers, or only the ones you're subscribed to if `mine` is set",
             }),
             buildContainer({
                 text: '**/trigger help**\n' + 'Displays this explanation',
