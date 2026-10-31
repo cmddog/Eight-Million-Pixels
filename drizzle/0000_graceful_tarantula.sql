@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `pseudonyms` (
 	`pseudonym` text NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `pseudonyms_pseudonym_unique` ON `pseudonyms` (`pseudonym`);--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS `pseudonyms_pseudonym_unique` ON `pseudonyms` (`pseudonym`);--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS `trigger_subscribers` (
 	`trigger_name` text NOT NULL,
 	`user_id` text NOT NULL,
