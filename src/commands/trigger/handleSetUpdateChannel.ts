@@ -39,7 +39,7 @@ export async function handleSetUpdateChannel(
     await db
         .insert(keyValue)
         .values({
-            key: 'triggerCreateAnnouncementChannelId',
+            key: 'triggerUpdateChannelId',
             value: channel.id,
         })
         .onConflictDoUpdate({
