@@ -63,30 +63,43 @@ export async function handleDelete(
     });
     const message = await interaction.editReply(buildConfirmationReply(false));
 
-    try {
-        const btn = await message.awaitMessageComponent({
-            filter: (i) => i.user.id === interaction.user.id,
-            time: 60_000,
-            componentType: ComponentType.Button,
-        });
+    const collector = message.createMessageComponentCollector({
+        time: 60_000,
+        componentType: ComponentType.Button,
+    });
 
-        if (btn.customId === 'confirm') {
-            await btn.update(buildConfirmationReply(true));
+    collector.on('collect', async (i) => {
+        if (i.user.id !== interaction.user.id)
+            return i.reply(
+                containerDisplay(
+                    { text: 'Not your dialog', color: 'error' },
+                    MessageFlags.Ephemeral,
+                ),
+            );
+
+        if (i.customId === 'confirm') {
+            await i.update(buildConfirmationReply(true));
             await db.delete(triggers).where(eq(triggers.name, name));
-            return btn.followUp(
+            await i.followUp(
                 containerDisplay({
                     text: `Successfully deleted trigger **${name}**`,
                     color: 'primary',
                 }),
             );
         } else {
-            return btn.update(
+            await i.update(
                 containerDisplay({ text: 'Interaction cancelled by user' }),
             );
         }
-    } catch {
-        return interaction.editReply(
-            containerDisplay({ text: 'Interaction timed out' }),
-        );
-    }
+        return collector.stop();
+    });
+
+    collector.on('end', (collected) => {
+        if (collected.size === 0) {
+            void interaction.editReply(
+                containerDisplay({ text: 'Interaction timed out' }),
+            );
+        }
+    });
+    return;
 }
