@@ -67,6 +67,7 @@ export async function handleDelete(
         time: 60_000,
         componentType: ComponentType.Button,
     });
+    let handled = false;
 
     collector.on('collect', async (i) => {
         if (i.user.id !== interaction.user.id)
@@ -77,6 +78,7 @@ export async function handleDelete(
                 ),
             );
 
+        handled = true;
         if (i.customId === 'confirm') {
             await i.update(buildConfirmationReply(true));
             await db.delete(triggers).where(eq(triggers.name, name));
@@ -94,8 +96,8 @@ export async function handleDelete(
         return collector.stop();
     });
 
-    collector.on('end', (collected) => {
-        if (collected.size === 0) {
+    collector.on('end', () => {
+        if (!handled) {
             void interaction.editReply(
                 containerDisplay({ text: 'Interaction timed out' }),
             );

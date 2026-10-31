@@ -51,8 +51,12 @@ export async function handleHelp(
                     'sure to make the system as anonymous as possible under those circumstances: The `/trigger ' +
                     'subscribe`, `unsubscribe`, `list`, and `help` commands are ephemeral, meaning you can use them ' +
                     'anywhere without other members being able to see. Uses of `/trigger subscribe` are logged ' +
-                    'pseudonymously. Only Administrators have the ability to tie a pseudonym back to you and this will ' +
+                    'pseudonymously. Only Administrators have the ability to tie a pseudonym back to a member and this will ' +
                     'never be done, unless someone is abusing the system.',
+            ),
+            new SeparatorBuilder(),
+            buildTextDisplay(
+                '*If you find any bugs, please yell at <@292629679582609419> to fix them*',
             ),
         ],
     });

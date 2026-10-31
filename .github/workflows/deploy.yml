@@ -1,6 +1,9 @@
 name: Deploy
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
@@ -16,5 +19,7 @@ jobs:
           script: |
             cd ~/eight-million-pixels
             git pull
-            echo "${{ secrets.ENV_FILE }}" > .env
+            cat > .env <<'ENVEOF'
+            ${{ secrets.ENV_FILE }}
+            ENVEOF
             docker compose up --build -d
