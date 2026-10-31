@@ -4,8 +4,8 @@ import {
     SeparatorBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { eq } from 'drizzle-orm';
-import { triggers } from '../../db/schema.js';
+import { and, eq } from 'drizzle-orm';
+import { triggers, triggerSubscribers } from '../../db/schema.js';
 import {
     buildContainer,
     buildTextDisplay,
@@ -31,17 +31,27 @@ export async function handleUnsubscribe(
         );
     }
 
-    const oldSubs = trigger.subscribers.split(',');
-    const newSubs = oldSubs.filter((id) => id !== interaction.user.id);
+    const deleted = await db
+        .delete(triggerSubscribers)
+        .where(
+            and(
+                eq(triggerSubscribers.triggerName, name),
+                eq(triggerSubscribers.userId, interaction.user.id),
+            ),
+        );
 
-    if (oldSubs.length === newSubs.length)
+    if (deleted.changes === 0)
         return interaction.editReply(
             containerDisplay({
                 text: `You already weren't subscribed to **${name}**`,
             }),
         );
 
-    if (newSubs.length === 0) {
+    const remaining = await db.query.triggerSubscribers.findFirst({
+        where: eq(triggerSubscribers.triggerName, name),
+    });
+
+    if (!remaining) {
         await db.delete(triggers).where(eq(triggers.name, name));
 
         void log(interaction.guild!, [
@@ -65,10 +75,6 @@ export async function handleUnsubscribe(
             }),
         );
     } else {
-        await db
-            .update(triggers)
-            .set({ subscribers: newSubs.join(',') })
-            .where(eq(triggers.name, name));
         return interaction.editReply(
             containerDisplay({
                 text: `Successfully unsubscribed from **${name}**`,

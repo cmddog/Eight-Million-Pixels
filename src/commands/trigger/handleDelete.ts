@@ -7,8 +7,8 @@ import {
     MessageFlags,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { eq } from 'drizzle-orm';
-import { triggers } from '../../db/schema.js';
+import { count, eq } from 'drizzle-orm';
+import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { buildContainer, containerDisplay } from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
 import { verifyAdmin } from './trigger.js';
@@ -30,7 +30,11 @@ export async function handleDelete(interaction: ChatInputCommandInteraction) {
             }),
         );
 
-    const subscriberCount = trigger.subscribers.split(',').length;
+    const [countRow] = await db
+        .select({ value: count() })
+        .from(triggerSubscribers)
+        .where(eq(triggerSubscribers.triggerName, name));
+    const subscriberCount = countRow?.value ?? 0;
     const buildConfirmationReply: (
         confirmed: boolean,
     ) => PartialMessageOptions = (confirmed: boolean) => ({

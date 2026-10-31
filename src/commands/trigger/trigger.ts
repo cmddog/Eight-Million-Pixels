@@ -7,8 +7,8 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { triggers } from '../../db/schema.js';
-import { eq, like } from 'drizzle-orm';
+import { triggers, triggerSubscribers } from '../../db/schema.js';
+import { and, eq, like } from 'drizzle-orm';
 import {
     buildContainer,
     buildTextDisplay,
@@ -207,9 +207,10 @@ export async function insertTrigger(
     description: string,
     interaction: ChatInputCommandInteraction,
 ) {
+    await db.insert(triggers).values({ name, description });
     await db
-        .insert(triggers)
-        .values({ name, description, subscribers: interaction.user.id });
+        .insert(triggerSubscribers)
+        .values({ triggerName: name, userId: interaction.user.id });
 
     const pseudonym = await getOrCreatePseudonym(interaction.user.id);
     void log(interaction.guild!, [
@@ -226,15 +227,24 @@ export async function insertTrigger(
     ]);
 }
 
-export async function subscribeToTrigger(
-    record: { name: string; subscribers: string },
-    userId: string,
-) {
-    const newSubs = record.subscribers.concat(`,${userId}`);
+export async function subscribeToTrigger(name: string, userId: string) {
     await db
-        .update(triggers)
-        .set({ subscribers: newSubs })
-        .where(eq(triggers.name, record.name));
+        .insert(triggerSubscribers)
+        .values({ triggerName: name, userId })
+        .onConflictDoNothing();
+}
+
+export async function isSubscribed(
+    name: string,
+    userId: string,
+): Promise<boolean> {
+    const row = await db.query.triggerSubscribers.findFirst({
+        where: and(
+            eq(triggerSubscribers.triggerName, name),
+            eq(triggerSubscribers.userId, userId),
+        ),
+    });
+    return row !== undefined;
 }
 
 export function isValidName(str: string): boolean {

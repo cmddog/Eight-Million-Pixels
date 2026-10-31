@@ -13,7 +13,12 @@ import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
 import { eq, like, or } from 'drizzle-orm';
 import { triggers } from '../../db/schema.js';
-import { insertTrigger, isValidName, subscribeToTrigger } from './trigger.js';
+import {
+    insertTrigger,
+    isSubscribed,
+    isValidName,
+    subscribeToTrigger,
+} from './trigger.js';
 
 export async function handleSubscribe(
     interaction: ChatInputCommandInteraction,
@@ -66,7 +71,7 @@ export async function handleSubscribe(
             }),
         );
     } else if (exactMatch) {
-        if (exactMatch.subscribers.includes(interaction.user.id)) {
+        if (await isSubscribed(exactMatch.name, interaction.user.id)) {
             return interaction.editReply(
                 containerDisplay({
                     text: `You are already subscribed to **${name}**`,
@@ -75,7 +80,7 @@ export async function handleSubscribe(
             );
         }
 
-        await subscribeToTrigger(exactMatch, interaction.user.id);
+        await subscribeToTrigger(exactMatch.name, interaction.user.id);
         return interaction.editReply(
             containerDisplay({
                 text: `Successfully subscribed to **${name}**`,
@@ -191,7 +196,7 @@ export async function handleSubscribe(
                     );
                 }
 
-                if (toUpdate.subscribers.includes(interaction.user.id)) {
+                if (await isSubscribed(toUpdate.name, interaction.user.id)) {
                     return btn.editReply(
                         containerDisplay({
                             text: `You are already subscribed to **${value}**`,
@@ -200,7 +205,7 @@ export async function handleSubscribe(
                     );
                 }
 
-                await subscribeToTrigger(toUpdate, interaction.user.id);
+                await subscribeToTrigger(toUpdate.name, interaction.user.id);
                 return btn.editReply(
                     containerDisplay({
                         text: `Successfully subscribed to **${value}**`,

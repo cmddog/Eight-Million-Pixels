@@ -1,8 +1,8 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
-import { eq } from 'drizzle-orm';
-import { triggers } from '../../db/schema.js';
+import { and, eq, notInArray } from 'drizzle-orm';
+import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { verifyAdmin } from './trigger.js';
 
 export async function handleMerge(interaction: ChatInputCommandInteraction) {
@@ -45,15 +45,22 @@ export async function handleMerge(interaction: ChatInputCommandInteraction) {
             }),
         );
 
-    const sourceSubs = source.subscribers.split(',');
-    const newTargetSubs = [
-        ...new Set(sourceSubs.concat(target.subscribers.split(','))),
-    ];
+    const targetSubs = await db.query.triggerSubscribers.findMany({
+        where: eq(triggerSubscribers.triggerName, targetName),
+    });
+    const targetUserIds = targetSubs.map((s) => s.userId);
 
     await db
-        .update(triggers)
-        .set({ subscribers: newTargetSubs.join(',') })
-        .where(eq(triggers.name, targetName));
+        .update(triggerSubscribers)
+        .set({ triggerName: targetName })
+        .where(
+            and(
+                eq(triggerSubscribers.triggerName, sourceName),
+                targetUserIds.length > 0
+                    ? notInArray(triggerSubscribers.userId, targetUserIds)
+                    : undefined,
+            ),
+        );
     await db.delete(triggers).where(eq(triggers.name, sourceName));
     return interaction.editReply(
         containerDisplay({

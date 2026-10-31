@@ -7,8 +7,8 @@ import {
     MessageFlags,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { triggers } from '../../db/schema.js';
-import { like } from 'drizzle-orm';
+import { triggers, triggerSubscribers } from '../../db/schema.js';
+import { eq } from 'drizzle-orm';
 import {
     buildContainer,
     buildTextDisplay,
@@ -22,9 +22,16 @@ export async function handleList(interaction: ChatInputCommandInteraction) {
     const mine = interaction.options.getBoolean('mine');
     const all = mine
         ? db
-              .select()
+              .select({
+                  name: triggers.name,
+                  description: triggers.description,
+              })
               .from(triggers)
-              .where(like(triggers.subscribers, `%${interaction.user.id}%`))
+              .innerJoin(
+                  triggerSubscribers,
+                  eq(triggerSubscribers.triggerName, triggers.name),
+              )
+              .where(eq(triggerSubscribers.userId, interaction.user.id))
               .orderBy(triggers.name)
               .all()
         : db.select().from(triggers).orderBy(triggers.name).all();
