@@ -6,8 +6,8 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { loggingChannel } from '../../db/schema.js';
 import { containerDisplay } from '../../utils.js';
+import { keyValue } from '../../db/schema.js';
 
 export const data = new SlashCommandBuilder()
     .setName('set-logging-channel')
@@ -44,11 +44,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
 
     await db
-        .insert(loggingChannel)
-        .values({ loggingChannelId: channel.id })
+        .insert(keyValue)
+        .values({ key: 'loggingChannelId', value: channel.id })
         .onConflictDoUpdate({
-            target: loggingChannel.id,
-            set: { loggingChannelId: channel.id },
+            target: keyValue.key,
+            set: { value: channel.id },
         });
 
     return interaction.editReply(

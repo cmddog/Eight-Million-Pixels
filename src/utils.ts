@@ -5,7 +5,7 @@ import type {
     PartialMessageOptions,
 } from './types.js';
 import { db } from './db/client.js';
-import { loggingChannel, pseudonyms } from './db/schema.js';
+import { keyValue, pseudonyms } from './db/schema.js';
 import {
     type ActionRowBuilder,
     type ButtonBuilder,
@@ -58,7 +58,7 @@ export async function getOrCreatePseudonym(userId: string) {
     return pseudonym;
 }
 
-const ACCENT_COLORS: Record<AccentColor, number> = {
+export const ACCENT_COLORS: Record<AccentColor, number> = {
     error: 0xea5d5c,
     primary: 0x5865f2,
 };
@@ -107,13 +107,13 @@ export async function log(
     guild: Guild,
     components: (ContainerBuilder | ActionRowBuilder<ButtonBuilder>)[],
 ) {
-    const [row] = await db
-        .select({ channelId: loggingChannel.loggingChannelId })
-        .from(loggingChannel);
+    const row = await db.query.keyValue.findFirst({
+        where: eq(keyValue.key, 'loggingChannelId'),
+    });
 
     if (!row) return;
 
-    const channel = await guild.channels.fetch(row.channelId);
+    const channel = await guild.channels.fetch(row.value);
     if (!channel?.isTextBased()) return;
 
     await channel.send({

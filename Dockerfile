@@ -9,4 +9,4 @@ RUN npm ci
 
 COPY . .
 
-CMD ["sh", "-c", "npx drizzle-kit push && npm run start:prod"]
+CMD ["sh", "-c", "npx drizzle-kit migrate && npm run start:prod"]

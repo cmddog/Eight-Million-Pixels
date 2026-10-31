@@ -8,7 +8,7 @@
         "start:prod": "tsx src/index.ts",
         "deploy": "tsx --env-file=.env deploy-commands.ts",
         "deploy:test": "tsx --env-file=.env.test deploy-commands.ts",
-        "db:push": "drizzle-kit push"
+        "db:migrate": "drizzle-kit migrate"
     },
     "type": "module",
     "keywords": [],

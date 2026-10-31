@@ -1,9 +1,4 @@
-import {
-    integer,
-    primaryKey,
-    sqliteTable,
-    text,
-} from 'drizzle-orm/sqlite-core';
+import { primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const triggers = sqliteTable('triggers', {
     name: text().primaryKey(),
@@ -29,7 +24,7 @@ export const pseudonyms = sqliteTable('pseudonyms', {
     pseudonym: text().unique().notNull(),
 });
 
-export const loggingChannel = sqliteTable('logging_channel', {
-    loggingChannelId: text('logging_channel_id').notNull(),
-    id: integer().primaryKey().default(1),
+export const keyValue = sqliteTable('key-value', {
+    key: text().primaryKey(),
+    value: text().notNull(),
 });

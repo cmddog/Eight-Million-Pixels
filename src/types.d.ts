@@ -4,6 +4,7 @@ import {
     Collection,
     type InteractionEditReplyOptions,
     type InteractionReplyOptions,
+    type MessageCreateOptions,
     SlashCommandBuilder,
 } from 'discord.js';
 
@@ -27,6 +28,8 @@ interface ContainerOptions {
 }
 
 type PartialMessageOptions = Pick<
-    InteractionReplyOptions & InteractionEditReplyOptions,
+    InteractionReplyOptions &
+        InteractionEditReplyOptions &
+        MessageCreateOptions,
     'components' | 'flags'
 >;

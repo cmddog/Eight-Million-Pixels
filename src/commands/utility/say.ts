@@ -17,6 +17,7 @@ import {
     containerDisplay,
     log,
 } from '../../utils.js';
+import type { AccentColor } from '../../types.js';
 
 export const data = new SlashCommandBuilder()
     .setName('say')
@@ -41,6 +42,24 @@ export const data = new SlashCommandBuilder()
     .addStringOption((o) =>
         o.setName('reply-to').setDescription('The ID of a message to reply to'),
     )
+    .addBooleanOption((o) =>
+        o
+            .setName('in-container')
+            .setDescription(
+                'Whether the message should be sent in a container',
+            ),
+    )
+    .addStringOption((o) =>
+        o
+            .setName('color')
+            .setDescription(
+                'Which color the container should have. Does nothing if in-container is false',
+            )
+            .setChoices(
+                { name: 'Primary', value: 'primary' },
+                { name: 'Error', value: 'error' },
+            ),
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -50,6 +69,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             ChannelType.GuildText,
         ]) ?? (interaction.channel as GuildTextBasedChannel);
     const replyToId = interaction.options.getString('reply-to');
+    const inContainer = interaction.options.getBoolean('in-container');
+    const color = interaction.options.getString('color') as
+        AccentColor | undefined;
 
     if (
         !channel
@@ -85,12 +107,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
     }
 
-    const sent = await channel.send({
-        content,
-        ...(replyToId && {
-            reply: { messageReference: replyToId, failIfNotExists: true },
-        }),
-    });
+    let sent;
+    if (!inContainer) {
+        sent = await channel.send({
+            content,
+            ...(replyToId && {
+                reply: { messageReference: replyToId, failIfNotExists: true },
+            }),
+        });
+    } else {
+        sent = await channel.send(
+            containerDisplay({ text: content, ...(color && { color }) }),
+        );
+    }
 
     void log(interaction.guild!, [
         new ContainerBuilder()
@@ -110,7 +139,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             )
             .addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(
-                    `${interaction.user} in ${interaction.channel}: ${content}`,
+                    `${interaction.user} in ${interaction.channel}:\n${content}`,
                 ),
             ),
     ]);

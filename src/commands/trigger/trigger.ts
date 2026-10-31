@@ -1,5 +1,6 @@
 import {
     type AutocompleteInteraction,
+    ChannelType,
     type ChatInputCommandInteraction,
     MessageFlags,
     PermissionFlagsBits,
@@ -7,7 +8,7 @@ import {
     SlashCommandBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { triggers, triggerSubscribers } from '../../db/schema.js';
+import { keyValue, triggers, triggerSubscribers } from '../../db/schema.js';
 import { and, eq, like } from 'drizzle-orm';
 import {
     buildContainer,
@@ -24,6 +25,7 @@ import { handleMerge } from './handleMerge.js';
 import { handleGetUser } from './handleGetUser.js';
 import { handleList } from './handleList.js';
 import { handleHelp } from './handleHelp.js';
+import { handleSetCreateAnnouncementChannel } from './handleSetCreateAnnouncementChannel.js';
 
 export const data = new SlashCommandBuilder()
     .setName('trigger')
@@ -173,6 +175,20 @@ export const data = new SlashCommandBuilder()
             .setDescription(
                 'Displays an explanation of how the trigger system works.',
             ),
+    )
+    .addSubcommand((sub) =>
+        sub
+            .setName('set-create-announcement-channel')
+            .setDescription(
+                'Sets the channel that EMP should announce the creation of new triggers in',
+            )
+            .addChannelOption((o) =>
+                o
+                    .setName('channel')
+                    .setDescription('The channel to send the announcements in')
+                    .addChannelTypes(ChannelType.GuildText)
+                    .setRequired(true),
+            ),
     );
 
 const handlers: Record<string, (i: ChatInputCommandInteraction) => unknown> = {
@@ -184,6 +200,7 @@ const handlers: Record<string, (i: ChatInputCommandInteraction) => unknown> = {
     'get-user': handleGetUser,
     list: handleList,
     help: handleHelp,
+    'set-create-announcement-channel': handleSetCreateAnnouncementChannel,
 };
 
 export async function execute(
@@ -229,6 +246,22 @@ export async function insertTrigger(
                 buildTextDisplay(`Added by ${pseudonym}`),
             ),
     ]);
+
+    const kv = await db.query.keyValue.findFirst({
+        where: eq(keyValue.key, 'triggerCreateAnnouncementChannelId'),
+    });
+
+    if (!kv) return;
+
+    const channel = await interaction.guild!.channels.fetch(kv.value);
+    if (!channel?.isTextBased()) return;
+
+    await channel.send(
+        containerDisplay({
+            text: `**${name}**\n${description}`,
+            color: 'primary',
+        }),
+    );
 }
 
 export async function subscribeToTrigger(
