@@ -7,11 +7,11 @@ import {
     MessageFlags,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { count, eq } from 'drizzle-orm';
+import { count, like } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { buildContainer, containerDisplay } from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
-import { verifyAdmin } from './trigger.js';
+import { sendUpdate, verifyAdmin } from './trigger.js';
 
 export async function handleDelete(
     interaction: ChatInputCommandInteraction,
@@ -21,7 +21,7 @@ export async function handleDelete(
 
     const name = interaction.options.getString('name', true);
     const trigger = await db.query.triggers.findFirst({
-        where: eq(triggers.name, name),
+        where: like(triggers.name, name),
     });
 
     if (!trigger)
@@ -35,7 +35,7 @@ export async function handleDelete(
     const [countRow] = await db
         .select({ value: count() })
         .from(triggerSubscribers)
-        .where(eq(triggerSubscribers.triggerName, name));
+        .where(like(triggerSubscribers.triggerName, name));
     const subscriberCount = countRow?.value ?? 0;
     const buildConfirmationReply: (
         confirmed: boolean,
@@ -81,12 +81,32 @@ export async function handleDelete(
         handled = true;
         if (i.customId === 'confirm') {
             await i.update(buildConfirmationReply(true));
-            await db.delete(triggers).where(eq(triggers.name, name));
+            const trigger = await db.query.triggers.findFirst({
+                where: like(triggers.name, name),
+            });
+
+            if (!trigger) {
+                collector.stop();
+                return interaction.editReply(
+                    containerDisplay({
+                        text: `The trigger **${name}** no longer exists`,
+                        color: 'error',
+                    }),
+                );
+            }
+
+            await db.delete(triggers).where(like(triggers.name, name));
             await i.followUp(
                 containerDisplay({
-                    text: `Successfully deleted trigger **${name}**`,
+                    text: `Successfully deleted trigger **${trigger.name}**`,
                     color: 'primary',
                 }),
+            );
+
+            void sendUpdate(
+                `### Removed\n**${trigger.name}**\n${trigger.description}`,
+                interaction.guild!,
+                'error',
             );
         } else {
             await i.update(

@@ -4,7 +4,7 @@ import {
     SeparatorBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, like } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import {
     buildContainer,
@@ -12,6 +12,7 @@ import {
     containerDisplay,
     log,
 } from '../../utils.js';
+import { sendUpdate } from './trigger.js';
 
 export async function handleUnsubscribe(
     interaction: ChatInputCommandInteraction,
@@ -20,7 +21,7 @@ export async function handleUnsubscribe(
     const name = interaction.options.getString('name', true);
 
     const trigger = await db.query.triggers.findFirst({
-        where: eq(triggers.name, name),
+        where: like(triggers.name, name),
     });
     if (!trigger) {
         return interaction.editReply(
@@ -35,7 +36,7 @@ export async function handleUnsubscribe(
         .delete(triggerSubscribers)
         .where(
             and(
-                eq(triggerSubscribers.triggerName, name),
+                like(triggerSubscribers.triggerName, name),
                 eq(triggerSubscribers.userId, interaction.user.id),
             ),
         );
@@ -43,16 +44,16 @@ export async function handleUnsubscribe(
     if (deleted.changes === 0)
         return interaction.editReply(
             containerDisplay({
-                text: `You already weren't subscribed to **${name}**`,
+                text: `You already weren't subscribed to **${trigger.name}**`,
             }),
         );
 
     const remaining = await db.query.triggerSubscribers.findFirst({
-        where: eq(triggerSubscribers.triggerName, name),
+        where: like(triggerSubscribers.triggerName, name),
     });
 
     if (!remaining) {
-        await db.delete(triggers).where(eq(triggers.name, name));
+        await db.delete(triggers).where(like(triggers.name, name));
 
         void log(interaction.guild!, [
             buildContainer({ text: '## Trigger Deleted' })
@@ -63,21 +64,27 @@ export async function handleUnsubscribe(
                 )
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(
-                    buildTextDisplay(`**${name}**`),
+                    buildTextDisplay(`**${trigger.name}**`),
                     buildTextDisplay(`${trigger.description}`),
                 ),
         ]);
 
+        void sendUpdate(
+            `### Removed\n**${trigger.name}\n${trigger.description}`,
+            interaction.guild!,
+            'error',
+        );
+
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully unsubscribed from **${name}**. You were the last subscriber and the trigger has been deleted`,
+                text: `Successfully unsubscribed from **${trigger.name}**. You were the last subscriber and the trigger has been deleted`,
                 color: 'primary',
             }),
         );
     } else {
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully unsubscribed from **${name}**`,
+                text: `Successfully unsubscribed from **${trigger.name}**`,
                 color: 'primary',
             }),
         );

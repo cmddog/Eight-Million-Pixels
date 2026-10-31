@@ -2,6 +2,7 @@ import {
     type AutocompleteInteraction,
     ChannelType,
     type ChatInputCommandInteraction,
+    type Guild,
     MessageFlags,
     PermissionFlagsBits,
     SeparatorBuilder,
@@ -25,7 +26,8 @@ import { handleMerge } from './handleMerge.js';
 import { handleGetUser } from './handleGetUser.js';
 import { handleList } from './handleList.js';
 import { handleHelp } from './handleHelp.js';
-import { handleSetCreateAnnouncementChannel } from './handleSetCreateAnnouncementChannel.js';
+import { handleSetUpdateChannel } from './handleSetUpdateChannel.js';
+import type { AccentColor } from '../../types.js';
 
 export const data = new SlashCommandBuilder()
     .setName('trigger')
@@ -107,6 +109,13 @@ export const data = new SlashCommandBuilder()
                     .setMinLength(3)
                     .setMaxLength(512)
                     .setRequired(true),
+            )
+            .addBooleanOption((o) =>
+                o
+                    .setName('with-announcement')
+                    .setDescription(
+                        'Whether this edit should be announced in the trigger update channel',
+                    ),
             ),
     )
     .addSubcommand((sub) =>
@@ -178,14 +187,14 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand((sub) =>
         sub
-            .setName('set-create-announcement-channel')
+            .setName('set-update-channel')
             .setDescription(
-                'Sets the channel that EMP should announce the creation of new triggers in',
+                'Sets the channel that EMP should send updates about triggers in',
             )
             .addChannelOption((o) =>
                 o
                     .setName('channel')
-                    .setDescription('The channel to send the announcements in')
+                    .setDescription('The channel to send updates in')
                     .addChannelTypes(ChannelType.GuildText)
                     .setRequired(true),
             ),
@@ -200,7 +209,7 @@ const handlers: Record<string, (i: ChatInputCommandInteraction) => unknown> = {
     'get-user': handleGetUser,
     list: handleList,
     help: handleHelp,
-    'set-create-announcement-channel': handleSetCreateAnnouncementChannel,
+    'set-update-channel': handleSetUpdateChannel,
 };
 
 export async function execute(
@@ -247,20 +256,10 @@ export async function insertTrigger(
             ),
     ]);
 
-    const kv = await db.query.keyValue.findFirst({
-        where: eq(keyValue.key, 'triggerCreateAnnouncementChannelId'),
-    });
-
-    if (!kv) return;
-
-    const channel = await interaction.guild!.channels.fetch(kv.value);
-    if (!channel?.isTextBased()) return;
-
-    await channel.send(
-        containerDisplay({
-            text: `**${name}**\n${description}`,
-            color: 'primary',
-        }),
+    void sendUpdate(
+        `### Added\n**${name}**\n${description}`,
+        interaction.guild!,
+        'primary',
     );
 }
 
@@ -280,7 +279,7 @@ export async function isSubscribed(
 ): Promise<boolean> {
     const row = await db.query.triggerSubscribers.findFirst({
         where: and(
-            eq(triggerSubscribers.triggerName, name),
+            like(triggerSubscribers.triggerName, name),
             eq(triggerSubscribers.userId, userId),
         ),
     });
@@ -307,4 +306,25 @@ export function verifyAdmin(interaction: ChatInputCommandInteraction): boolean {
         );
     }
     return !!hasAdmin;
+}
+
+export async function sendUpdate(
+    text: string,
+    guild: Guild,
+    color?: AccentColor,
+): Promise<void> {
+    const kv = await db.query.keyValue.findFirst({
+        where: eq(keyValue.key, 'triggerUpdateChannelId'),
+    });
+
+    console.log('send update, ', kv);
+
+    if (!kv) return;
+
+    const channel = await guild.channels.fetch(kv.value);
+    if (!channel?.isTextBased()) return;
+
+    await channel.send(
+        containerDisplay({ text: text, ...(color && { color }) }),
+    );
 }

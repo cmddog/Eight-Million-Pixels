@@ -9,7 +9,7 @@ import { db } from '../../db/client.js';
 import { keyValue } from '../../db/schema.js';
 import { verifyAdmin } from './trigger.js';
 
-export async function handleSetCreateAnnouncementChannel(
+export async function handleSetUpdateChannel(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
     if (!verifyAdmin(interaction)) return;

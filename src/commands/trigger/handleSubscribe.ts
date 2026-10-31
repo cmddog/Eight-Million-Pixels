@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
-import { eq, like, or } from 'drizzle-orm';
+import { like, or } from 'drizzle-orm';
 import { triggers } from '../../db/schema.js';
 import {
     insertTrigger,
@@ -52,7 +52,9 @@ export async function handleSubscribe(
         ),
     });
 
-    const exactMatch = matches.find((m) => m.name === name);
+    const exactMatch = matches.find(
+        (m) => m.name.toLowerCase() === name.toLowerCase(),
+    );
 
     if (matches.length === 0) {
         if (!description) {
@@ -74,7 +76,7 @@ export async function handleSubscribe(
         if (await isSubscribed(exactMatch.name, interaction.user.id)) {
             return interaction.editReply(
                 containerDisplay({
-                    text: `You are already subscribed to **${name}**`,
+                    text: `You are already subscribed to **${exactMatch.name}**`,
                     color: 'error',
                 }),
             );
@@ -83,7 +85,7 @@ export async function handleSubscribe(
         await subscribeToTrigger(exactMatch.name, interaction.user.id);
         return interaction.editReply(
             containerDisplay({
-                text: `Successfully subscribed to **${name}**`,
+                text: `Successfully subscribed to **${exactMatch.name}**`,
                 color: 'primary',
             }),
         );
@@ -185,7 +187,7 @@ export async function handleSubscribe(
                 await btn.update(containerDisplay({ text: 'Subscribing...' }));
 
                 const toUpdate = await db.query.triggers.findFirst({
-                    where: eq(triggers.name, value!),
+                    where: like(triggers.name, value!),
                 });
                 if (!toUpdate) {
                     return interaction.editReply(

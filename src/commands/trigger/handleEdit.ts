@@ -1,13 +1,13 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { db } from '../../db/client.js';
-import { eq } from 'drizzle-orm';
+import { like } from 'drizzle-orm';
 import { triggers } from '../../db/schema.js';
 import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
 } from '../../utils.js';
-import { isValidName, verifyAdmin } from './trigger.js';
+import { isValidName, sendUpdate, verifyAdmin } from './trigger.js';
 
 export async function handleEdit(
     interaction: ChatInputCommandInteraction,
@@ -19,26 +19,28 @@ export async function handleEdit(
     const property = interaction.options.getString('property', true) as
         'name' | 'description';
     const newValue = interaction.options.getString('new-value', true).trim();
+    const withAnnouncement =
+        interaction.options.getBoolean('with-announcement');
 
     const trigger = await db.query.triggers.findFirst({
-        where: eq(triggers.name, name),
+        where: like(triggers.name, name),
     });
     if (!trigger)
         return interaction.editReply(
             containerDisplay({
-                text: `There is no trigger called ${name}`,
+                text: `There is no trigger called **${name}**`,
                 color: 'error',
             }),
         );
     switch (property) {
         case 'name': {
             const existing = await db.query.triggers.findFirst({
-                where: eq(triggers.name, newValue),
+                where: like(triggers.name, newValue),
             });
-            if (existing)
+            if (existing && trigger.name !== existing.name)
                 return interaction.editReply(
                     containerDisplay({
-                        text: `There is already a trigger called **${newValue}**. Did you mean to use \`/trigger merge\`?`,
+                        text: `There is already a trigger called **${existing.name}**. Did you mean to use \`/trigger merge\`?`,
                     }),
                 );
 
@@ -59,10 +61,17 @@ export async function handleEdit(
             await db
                 .update(triggers)
                 .set({ name: newValue })
-                .where(eq(triggers.name, name));
+                .where(like(triggers.name, name));
+
+            if (withAnnouncement)
+                void sendUpdate(
+                    `Name of trigger **${trigger.name}** changed to **${newValue}**`,
+                    interaction.guild!,
+                );
+
             return interaction.editReply(
                 containerDisplay({
-                    text: `Name of trigger successfully changed from **${name}** to **${newValue}**`,
+                    text: `Name of trigger successfully changed from **${trigger.name}** to **${newValue}**`,
                     color: 'primary',
                 }),
             );
@@ -78,11 +87,18 @@ export async function handleEdit(
             await db
                 .update(triggers)
                 .set({ description: newValue })
-                .where(eq(triggers.name, name));
+                .where(like(triggers.name, name));
+
+            if (withAnnouncement)
+                void sendUpdate(
+                    `### Description of trigger *${trigger.name} changed*\nBefore:\n> ${trigger.description}\nAfter:\n> ${newValue}`,
+                    interaction.guild!,
+                );
+
             return interaction.editReply({
                 components: [
                     buildContainer({
-                        text: `### Description of trigger **${name}** successfully changed`,
+                        text: `### Description of trigger **${trigger.name}** successfully changed`,
                         color: 'primary',
                     }).addTextDisplayComponents(
                         buildTextDisplay(`Before:\n> ${trigger.description}`),

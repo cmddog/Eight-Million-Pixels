@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
-import { and, eq, notInArray } from 'drizzle-orm';
+import { and, like, notInArray } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { verifyAdmin } from './trigger.js';
 
@@ -26,7 +26,7 @@ export async function handleMerge(
     await interaction.deferReply();
 
     const source = await db.query.triggers.findFirst({
-        where: eq(triggers.name, sourceName),
+        where: like(triggers.name, sourceName),
     });
     if (!source)
         return interaction.editReply(
@@ -37,7 +37,7 @@ export async function handleMerge(
         );
 
     const target = await db.query.triggers.findFirst({
-        where: eq(triggers.name, targetName),
+        where: like(triggers.name, targetName),
     });
     if (!target)
         return interaction.editReply(
@@ -48,7 +48,7 @@ export async function handleMerge(
         );
 
     const targetSubs = await db.query.triggerSubscribers.findMany({
-        where: eq(triggerSubscribers.triggerName, targetName),
+        where: like(triggerSubscribers.triggerName, targetName),
     });
     const targetUserIds = targetSubs.map((s) => s.userId);
 
@@ -57,13 +57,13 @@ export async function handleMerge(
         .set({ triggerName: targetName })
         .where(
             and(
-                eq(triggerSubscribers.triggerName, sourceName),
+                like(triggerSubscribers.triggerName, sourceName),
                 targetUserIds.length > 0
                     ? notInArray(triggerSubscribers.userId, targetUserIds)
                     : undefined,
             ),
         );
-    await db.delete(triggers).where(eq(triggers.name, sourceName));
+    await db.delete(triggers).where(like(triggers.name, sourceName));
     return interaction.editReply(
         containerDisplay({
             text: `Transferred unique subscribers to **${targetName}** and deleted **${sourceName}**`,
