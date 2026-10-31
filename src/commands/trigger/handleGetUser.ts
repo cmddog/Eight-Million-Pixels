@@ -5,7 +5,9 @@ import { pseudonyms } from '../../db/schema.js';
 import { containerDisplay } from '../../utils.js';
 import { verifyAdmin } from './trigger.js';
 
-export async function handleGetUser(interaction: ChatInputCommandInteraction) {
+export async function handleGetUser(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     if (!verifyAdmin(interaction)) return;
     await interaction.deferReply();
 

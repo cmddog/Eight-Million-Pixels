@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.reply(
             containerDisplay(
                 {
-                    text: "🚫 I don't have permission to send messages in that channel",
+                    text: `I don't have permission to send messages in ${channel}`,
                     color: 'error',
                 },
                 MessageFlags.Ephemeral,

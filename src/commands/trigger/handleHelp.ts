@@ -5,8 +5,10 @@ import {
 } from 'discord.js';
 import { buildContainer, buildTextDisplay } from '../../utils.js';
 
-export async function handleHelp(interaction: ChatInputCommandInteraction) {
-    await interaction.reply({
+export async function handleHelp(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
+    return interaction.reply({
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         components: [
             buildTextDisplay(

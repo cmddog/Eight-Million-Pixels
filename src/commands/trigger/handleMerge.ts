@@ -5,7 +5,9 @@ import { and, eq, notInArray } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { verifyAdmin } from './trigger.js';
 
-export async function handleMerge(interaction: ChatInputCommandInteraction) {
+export async function handleMerge(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     if (!verifyAdmin(interaction)) return;
 
     const sourceName = interaction.options.getString('source-name', true);

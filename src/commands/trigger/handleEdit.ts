@@ -9,7 +9,9 @@ import {
 } from '../../utils.js';
 import { isValidName, verifyAdmin } from './trigger.js';
 
-export async function handleEdit(interaction: ChatInputCommandInteraction) {
+export async function handleEdit(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     if (!verifyAdmin(interaction)) return;
     await interaction.deferReply();
 

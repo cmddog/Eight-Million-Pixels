@@ -22,7 +22,7 @@ import {
 
 export async function handleSubscribe(
     interaction: ChatInputCommandInteraction,
-) {
+): Promise<unknown> {
     const name = interaction.options.getString('name', true);
     const description = interaction.options.getString('description');
 
@@ -175,7 +175,7 @@ export async function handleSubscribe(
                 }
                 await btn.update(containerDisplay({ text: 'Inserting...' }));
                 await insertTrigger(name, description, interaction);
-                return btn.editReply(
+                return interaction.editReply(
                     containerDisplay({
                         text: `Successfully added new trigger **${name}**`,
                         color: 'primary',
@@ -188,7 +188,7 @@ export async function handleSubscribe(
                     where: eq(triggers.name, value!),
                 });
                 if (!toUpdate) {
-                    return btn.editReply(
+                    return interaction.editReply(
                         containerDisplay({
                             text: `The trigger **${value}** no longer exists`,
                             color: 'error',
@@ -197,7 +197,7 @@ export async function handleSubscribe(
                 }
 
                 if (await isSubscribed(toUpdate.name, interaction.user.id)) {
-                    return btn.editReply(
+                    return interaction.editReply(
                         containerDisplay({
                             text: `You are already subscribed to **${value}**`,
                             color: 'error',
@@ -206,7 +206,7 @@ export async function handleSubscribe(
                 }
 
                 await subscribeToTrigger(toUpdate.name, interaction.user.id);
-                return btn.editReply(
+                return interaction.editReply(
                     containerDisplay({
                         text: `Successfully subscribed to **${value}**`,
                         color: 'primary',

@@ -13,7 +13,9 @@ import { buildContainer, containerDisplay } from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
 import { verifyAdmin } from './trigger.js';
 
-export async function handleDelete(interaction: ChatInputCommandInteraction) {
+export async function handleDelete(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     if (!verifyAdmin(interaction)) return;
     await interaction.deferReply();
 

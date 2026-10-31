@@ -186,18 +186,22 @@ const handlers: Record<string, (i: ChatInputCommandInteraction) => unknown> = {
     help: handleHelp,
 };
 
-export async function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     return handlers[interaction.options.getSubcommand()]?.(interaction);
 }
 
-export async function autocomplete(interaction: AutocompleteInteraction) {
+export async function autocomplete(
+    interaction: AutocompleteInteraction,
+): Promise<unknown> {
     const focused = interaction.options.getFocused();
     const results = await db
         .select({ name: triggers.name })
         .from(triggers)
         .where(like(triggers.name, `%${focused}%`))
         .limit(25);
-    await interaction.respond(
+    return interaction.respond(
         results.map((r) => ({ name: r.name, value: r.name })),
     );
 }
@@ -206,7 +210,7 @@ export async function insertTrigger(
     name: string,
     description: string,
     interaction: ChatInputCommandInteraction,
-) {
+): Promise<void> {
     await db.insert(triggers).values({ name, description });
     await db
         .insert(triggerSubscribers)
@@ -227,7 +231,10 @@ export async function insertTrigger(
     ]);
 }
 
-export async function subscribeToTrigger(name: string, userId: string) {
+export async function subscribeToTrigger(
+    name: string,
+    userId: string,
+): Promise<void> {
     await db
         .insert(triggerSubscribers)
         .values({ triggerName: name, userId })
@@ -251,7 +258,7 @@ export function isValidName(str: string): boolean {
     return /^[A-Za-z ]+$/.test(str);
 }
 
-export function verifyAdmin(interaction: ChatInputCommandInteraction) {
+export function verifyAdmin(interaction: ChatInputCommandInteraction): boolean {
     const hasAdmin = interaction.memberPermissions?.has(
         PermissionFlagsBits.Administrator,
     );

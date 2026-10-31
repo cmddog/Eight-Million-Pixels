@@ -15,7 +15,9 @@ import {
     containerDisplay,
 } from '../../utils.js';
 
-export async function handleList(interaction: ChatInputCommandInteraction) {
+export async function handleList(
+    interaction: ChatInputCommandInteraction,
+): Promise<unknown> {
     const PAGE_SIZE = 5;
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -63,7 +65,7 @@ export async function handleList(interaction: ChatInputCommandInteraction) {
         if (pages > 1) {
             components.push(
                 buildTextDisplay(
-                    `*Showing ${PAGE_SIZE} of ${all.length} · Page ${p + 1} of ${pages}*`,
+                    `*Showing ${page.length} of ${all.length} · Page ${p + 1} of ${pages}*`,
                 ),
             );
             components.push(

@@ -15,7 +15,7 @@ import {
 
 export async function handleUnsubscribe(
     interaction: ChatInputCommandInteraction,
-) {
+): Promise<unknown> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const name = interaction.options.getString('name', true);
 
