@@ -90,7 +90,7 @@ export async function handleEdit(
 
             if (withAnnouncement)
                 void sendUpdate(
-                    `### Description of trigger *${trigger.name} changed*\nBefore:\n> ${trigger.description}\nAfter:\n> ${newValue}`,
+                    `### Description of trigger *${trigger.name}* changed\nBefore:\n> ${trigger.description}\nAfter:\n> ${newValue}`,
                     interaction.guild!,
                 );
 
