@@ -1,13 +1,12 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { db } from '../../db/client.js';
-import { like } from 'drizzle-orm';
 import { triggers } from '../../db/schema.js';
 import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
 } from '../../utils.js';
-import { isValidName, sendUpdate, verifyAdmin } from './trigger.js';
+import { isValidName, nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
 
 export async function handleEdit(
     interaction: ChatInputCommandInteraction,
@@ -23,7 +22,7 @@ export async function handleEdit(
         interaction.options.getBoolean('with-announcement');
 
     const trigger = await db.query.triggers.findFirst({
-        where: like(triggers.name, name),
+        where: nameEquals(triggers.name, name),
     });
     if (!trigger)
         return interaction.editReply(
@@ -35,7 +34,7 @@ export async function handleEdit(
     switch (property) {
         case 'name': {
             const existing = await db.query.triggers.findFirst({
-                where: like(triggers.name, newValue),
+                where: nameEquals(triggers.name, newValue),
             });
             if (existing && trigger.name !== existing.name)
                 return interaction.editReply(
@@ -61,7 +60,7 @@ export async function handleEdit(
             await db
                 .update(triggers)
                 .set({ name: newValue })
-                .where(like(triggers.name, name));
+                .where(nameEquals(triggers.name, name));
 
             if (withAnnouncement)
                 void sendUpdate(
@@ -87,7 +86,7 @@ export async function handleEdit(
             await db
                 .update(triggers)
                 .set({ description: newValue })
-                .where(like(triggers.name, name));
+                .where(nameEquals(triggers.name, name));
 
             if (withAnnouncement)
                 void sendUpdate(

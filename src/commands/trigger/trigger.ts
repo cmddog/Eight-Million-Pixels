@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { db } from '../../db/client.js';
 import { keyValue, triggers, triggerSubscribers } from '../../db/schema.js';
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq, like, sql, type SQL } from 'drizzle-orm';
 import {
     buildContainer,
     buildTextDisplay,
@@ -279,7 +279,7 @@ export async function isSubscribed(
 ): Promise<boolean> {
     const row = await db.query.triggerSubscribers.findFirst({
         where: and(
-            like(triggerSubscribers.triggerName, name),
+            nameEquals(triggerSubscribers.triggerName, name),
             eq(triggerSubscribers.userId, userId),
         ),
     });
@@ -288,6 +288,13 @@ export async function isSubscribed(
 
 export function isValidName(str: string): boolean {
     return /^[A-Za-z ]+$/.test(str);
+}
+
+export function nameEquals(
+    column: typeof triggers.name | typeof triggerSubscribers.triggerName,
+    value: string,
+): SQL {
+    return sql`lower(${column}) = lower(${value})`;
 }
 
 export function verifyAdmin(interaction: ChatInputCommandInteraction): boolean {
@@ -316,8 +323,6 @@ export async function sendUpdate(
     const kv = await db.query.keyValue.findFirst({
         where: eq(keyValue.key, 'triggerUpdateChannelId'),
     });
-
-    console.log('send update, ', kv);
 
     if (!kv) return;
 

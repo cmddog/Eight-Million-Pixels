@@ -17,6 +17,7 @@ import {
     insertTrigger,
     isSubscribed,
     isValidName,
+    nameEquals,
     subscribeToTrigger,
 } from './trigger.js';
 
@@ -187,7 +188,7 @@ export async function handleSubscribe(
                 await btn.update(containerDisplay({ text: 'Subscribing...' }));
 
                 const toUpdate = await db.query.triggers.findFirst({
-                    where: like(triggers.name, value!),
+                    where: nameEquals(triggers.name, value!),
                 });
                 if (!toUpdate) {
                     return interaction.editReply(

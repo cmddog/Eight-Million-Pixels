@@ -7,11 +7,11 @@ import {
     MessageFlags,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { count, like } from 'drizzle-orm';
+import { count } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import { buildContainer, containerDisplay } from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
-import { sendUpdate, verifyAdmin } from './trigger.js';
+import { nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
 
 export async function handleDelete(
     interaction: ChatInputCommandInteraction,
@@ -21,7 +21,7 @@ export async function handleDelete(
 
     const name = interaction.options.getString('name', true);
     const trigger = await db.query.triggers.findFirst({
-        where: like(triggers.name, name),
+        where: nameEquals(triggers.name, name),
     });
 
     if (!trigger)
@@ -35,7 +35,7 @@ export async function handleDelete(
     const [countRow] = await db
         .select({ value: count() })
         .from(triggerSubscribers)
-        .where(like(triggerSubscribers.triggerName, name));
+        .where(nameEquals(triggerSubscribers.triggerName, name));
     const subscriberCount = countRow?.value ?? 0;
     const buildConfirmationReply: (
         confirmed: boolean,
@@ -82,7 +82,7 @@ export async function handleDelete(
         if (i.customId === 'confirm') {
             await i.update(buildConfirmationReply(true));
             const trigger = await db.query.triggers.findFirst({
-                where: like(triggers.name, name),
+                where: nameEquals(triggers.name, name),
             });
 
             if (!trigger) {
@@ -95,7 +95,7 @@ export async function handleDelete(
                 );
             }
 
-            await db.delete(triggers).where(like(triggers.name, name));
+            await db.delete(triggers).where(nameEquals(triggers.name, name));
             await i.followUp(
                 containerDisplay({
                     text: `Successfully deleted trigger **${trigger.name}**`,

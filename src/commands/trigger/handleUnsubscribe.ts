@@ -4,7 +4,7 @@ import {
     SeparatorBuilder,
 } from 'discord.js';
 import { db } from '../../db/client.js';
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
 import {
     buildContainer,
@@ -12,7 +12,7 @@ import {
     containerDisplay,
     log,
 } from '../../utils.js';
-import { sendUpdate } from './trigger.js';
+import { nameEquals, sendUpdate } from './trigger.js';
 
 export async function handleUnsubscribe(
     interaction: ChatInputCommandInteraction,
@@ -21,7 +21,7 @@ export async function handleUnsubscribe(
     const name = interaction.options.getString('name', true);
 
     const trigger = await db.query.triggers.findFirst({
-        where: like(triggers.name, name),
+        where: nameEquals(triggers.name, name),
     });
     if (!trigger) {
         return interaction.editReply(
@@ -36,7 +36,7 @@ export async function handleUnsubscribe(
         .delete(triggerSubscribers)
         .where(
             and(
-                like(triggerSubscribers.triggerName, name),
+                nameEquals(triggerSubscribers.triggerName, trigger.name),
                 eq(triggerSubscribers.userId, interaction.user.id),
             ),
         );
@@ -49,11 +49,11 @@ export async function handleUnsubscribe(
         );
 
     const remaining = await db.query.triggerSubscribers.findFirst({
-        where: like(triggerSubscribers.triggerName, name),
+        where: nameEquals(triggerSubscribers.triggerName, trigger.name),
     });
 
     if (!remaining) {
-        await db.delete(triggers).where(like(triggers.name, name));
+        await db.delete(triggers).where(nameEquals(triggers.name, trigger.name));
 
         void log(interaction.guild!, [
             buildContainer({ text: '## Trigger Deleted' })
@@ -70,7 +70,7 @@ export async function handleUnsubscribe(
         ]);
 
         void sendUpdate(
-            `### Removed\n**${trigger.name}\n${trigger.description}`,
+            `### Removed\n**${trigger.name}**\n${trigger.description}`,
             interaction.guild!,
             'error',
         );

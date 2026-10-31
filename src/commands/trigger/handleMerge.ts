@@ -1,9 +1,9 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
-import { and, like, notInArray } from 'drizzle-orm';
+import { and, notInArray } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
-import { verifyAdmin } from './trigger.js';
+import { nameEquals, verifyAdmin } from './trigger.js';
 
 export async function handleMerge(
     interaction: ChatInputCommandInteraction,
@@ -13,7 +13,7 @@ export async function handleMerge(
     const sourceName = interaction.options.getString('source-name', true);
     const targetName = interaction.options.getString('target-name', true);
 
-    if (sourceName === targetName)
+    if (sourceName.toLowerCase() === targetName.toLowerCase())
         return interaction.reply(
             containerDisplay(
                 {
@@ -26,7 +26,7 @@ export async function handleMerge(
     await interaction.deferReply();
 
     const source = await db.query.triggers.findFirst({
-        where: like(triggers.name, sourceName),
+        where: nameEquals(triggers.name, sourceName),
     });
     if (!source)
         return interaction.editReply(
@@ -37,7 +37,7 @@ export async function handleMerge(
         );
 
     const target = await db.query.triggers.findFirst({
-        where: like(triggers.name, targetName),
+        where: nameEquals(triggers.name, targetName),
     });
     if (!target)
         return interaction.editReply(
@@ -48,22 +48,22 @@ export async function handleMerge(
         );
 
     const targetSubs = await db.query.triggerSubscribers.findMany({
-        where: like(triggerSubscribers.triggerName, targetName),
+        where: nameEquals(triggerSubscribers.triggerName, target.name),
     });
     const targetUserIds = targetSubs.map((s) => s.userId);
 
     await db
         .update(triggerSubscribers)
-        .set({ triggerName: targetName })
+        .set({ triggerName: target.name })
         .where(
             and(
-                like(triggerSubscribers.triggerName, sourceName),
+                nameEquals(triggerSubscribers.triggerName, source.name),
                 targetUserIds.length > 0
                     ? notInArray(triggerSubscribers.userId, targetUserIds)
                     : undefined,
             ),
         );
-    await db.delete(triggers).where(like(triggers.name, sourceName));
+    await db.delete(triggers).where(nameEquals(triggers.name, source.name));
     return interaction.editReply(
         containerDisplay({
             text: `Transferred unique subscribers to **${targetName}** and deleted **${sourceName}**`,
