@@ -1,9 +1,11 @@
 import {
     type ChatInputCommandInteraction,
-    MessageFlags,
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from 'discord.js';
+import { containerDisplay } from '../../utils.js';
+import { db } from '../../db/client.js';
+import { keyValue } from '../../db/schema.js';
 
 export const data = new SlashCommandBuilder()
     .setName('set-status')
@@ -17,17 +19,32 @@ export const data = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+    const status = interaction.options.getString('content', true);
+
     interaction.client.user.setPresence({
         activities: [
             {
-                name: interaction.options.getString('content', true),
+                name: status,
             },
         ],
         status: 'online',
     });
 
-    return interaction.reply({
-        content: 'Status set.',
-        flags: MessageFlags.Ephemeral,
-    });
+    void db
+        .insert(keyValue)
+        .values({
+            key: 'status',
+            value: status,
+        })
+        .onConflictDoUpdate({
+            target: keyValue.key,
+            set: { value: status },
+        });
+
+    return interaction.reply(
+        containerDisplay({
+            text: `Status set to "${status}"`,
+            color: 'primary',
+        }),
+    );
 }

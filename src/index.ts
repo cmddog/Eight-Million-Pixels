@@ -3,6 +3,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isCommand } from './utils.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import { db } from './db/client.js';
+import { eq } from 'drizzle-orm';
+import { keyValue } from './db/schema.js';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
@@ -49,3 +52,16 @@ for (const file of eventFiles) {
 }
 
 void client.login(process.env.DISCORD_TOKEN);
+
+const statusKv = await db.query.keyValue.findFirst({
+    where: eq(keyValue.key, 'status'),
+});
+if (statusKv)
+    client.user?.setPresence({
+        activities: [
+            {
+                name: statusKv.value,
+            },
+        ],
+        status: 'online',
+    });
