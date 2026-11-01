@@ -51,7 +51,7 @@ for (const file of eventFiles) {
     }
 }
 
-void client.login(process.env.DISCORD_TOKEN);
+await client.login(process.env.DISCORD_TOKEN);
 
 const statusKv = await db.query.keyValue.findFirst({
     where: eq(keyValue.key, 'status'),

@@ -15,6 +15,7 @@ import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
+    fireAndForget,
     log,
 } from '../../utils.js';
 import type { AccentColor } from '../../types.js';
@@ -121,28 +122,30 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         );
     }
 
-    void log(interaction.guild!, [
-        new ContainerBuilder()
-            .addSectionComponents(
-                new SectionBuilder()
-                    .addTextDisplayComponents(
-                        new TextDisplayBuilder().setContent(
-                            '### Sent a Message as EMP',
+    fireAndForget(
+        log(interaction.guild!, [
+            new ContainerBuilder()
+                .addSectionComponents(
+                    new SectionBuilder()
+                        .addTextDisplayComponents(
+                            new TextDisplayBuilder().setContent(
+                                '### Sent a Message as EMP',
+                            ),
+                        )
+                        .setButtonAccessory(
+                            new ButtonBuilder()
+                                .setURL(sent.url)
+                                .setLabel('Jump')
+                                .setStyle(ButtonStyle.Link),
                         ),
-                    )
-                    .setButtonAccessory(
-                        new ButtonBuilder()
-                            .setURL(sent.url)
-                            .setLabel('Jump')
-                            .setStyle(ButtonStyle.Link),
+                )
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(
+                        `${interaction.user} in ${interaction.channel}:\n${content}`,
                     ),
-            )
-            .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent(
-                    `${interaction.user} in ${interaction.channel}:\n${content}`,
                 ),
-            ),
-    ]);
+        ]),
+    );
 
     return interaction.editReply({
         components: [

@@ -10,6 +10,7 @@ import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
+    fireAndForget,
     log,
 } from '../../utils.js';
 import { nameEquals, sendUpdate } from './trigger.js';
@@ -53,26 +54,32 @@ export async function handleUnsubscribe(
     });
 
     if (!remaining) {
-        await db.delete(triggers).where(nameEquals(triggers.name, trigger.name));
+        await db
+            .delete(triggers)
+            .where(nameEquals(triggers.name, trigger.name));
 
-        void log(interaction.guild!, [
-            buildContainer({ text: '## Trigger Deleted' })
-                .addTextDisplayComponents(
-                    buildTextDisplay(
-                        'This trigger lost its last subscriber and was deleted:',
+        fireAndForget(
+            log(interaction.guild!, [
+                buildContainer({ text: '## Trigger Deleted' })
+                    .addTextDisplayComponents(
+                        buildTextDisplay(
+                            'This trigger lost its last subscriber and was deleted:',
+                        ),
+                    )
+                    .addSeparatorComponents(new SeparatorBuilder())
+                    .addTextDisplayComponents(
+                        buildTextDisplay(`**${trigger.name}**`),
+                        buildTextDisplay(`${trigger.description}`),
                     ),
-                )
-                .addSeparatorComponents(new SeparatorBuilder())
-                .addTextDisplayComponents(
-                    buildTextDisplay(`**${trigger.name}**`),
-                    buildTextDisplay(`${trigger.description}`),
-                ),
-        ]);
+            ]),
+        );
 
-        void sendUpdate(
-            `### Removed\n**${trigger.name}**\n${trigger.description}`,
-            interaction.guild!,
-            'error',
+        fireAndForget(
+            sendUpdate(
+                `### Removed\n**${trigger.name}**\n${trigger.description}`,
+                interaction.guild!,
+                'error',
+            ),
         );
 
         return interaction.editReply(

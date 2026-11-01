@@ -5,6 +5,7 @@ import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
+    fireAndForget,
 } from '../../utils.js';
 import { isValidName, nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
 
@@ -63,9 +64,11 @@ export async function handleEdit(
                 .where(nameEquals(triggers.name, name));
 
             if (withAnnouncement)
-                void sendUpdate(
-                    `Name of trigger **${trigger.name}** changed to **${newValue}**`,
-                    interaction.guild!,
+                fireAndForget(
+                    sendUpdate(
+                        `Name of trigger **${trigger.name}** changed to **${newValue}**`,
+                        interaction.guild!,
+                    ),
                 );
 
             return interaction.editReply(
@@ -89,9 +92,11 @@ export async function handleEdit(
                 .where(nameEquals(triggers.name, name));
 
             if (withAnnouncement)
-                void sendUpdate(
-                    `### Description of trigger *${trigger.name}* changed\nBefore:\n> ${trigger.description}\nAfter:\n> ${newValue}`,
-                    interaction.guild!,
+                fireAndForget(
+                    sendUpdate(
+                        `### Description of trigger *${trigger.name}* changed\nBefore:\n> ${trigger.description}\nAfter:\n> ${newValue}`,
+                        interaction.guild!,
+                    ),
                 );
 
             return interaction.editReply({

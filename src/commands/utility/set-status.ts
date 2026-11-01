@@ -3,7 +3,7 @@ import {
     PermissionFlagsBits,
     SlashCommandBuilder,
 } from 'discord.js';
-import { containerDisplay } from '../../utils.js';
+import { containerDisplay, fireAndForget } from '../../utils.js';
 import { db } from '../../db/client.js';
 import { keyValue } from '../../db/schema.js';
 
@@ -30,16 +30,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         status: 'online',
     });
 
-    void db
-        .insert(keyValue)
-        .values({
-            key: 'status',
-            value: status,
-        })
-        .onConflictDoUpdate({
-            target: keyValue.key,
-            set: { value: status },
-        });
+    fireAndForget(
+        db
+            .insert(keyValue)
+            .values({
+                key: 'status',
+                value: status,
+            })
+            .onConflictDoUpdate({
+                target: keyValue.key,
+                set: { value: status },
+            }),
+    );
 
     return interaction.reply(
         containerDisplay({

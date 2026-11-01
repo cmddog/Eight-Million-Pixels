@@ -9,7 +9,11 @@ import {
 import { db } from '../../db/client.js';
 import { count } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
-import { buildContainer, containerDisplay } from '../../utils.js';
+import {
+    buildContainer,
+    containerDisplay,
+    fireAndForget,
+} from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
 import { nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
 
@@ -103,10 +107,12 @@ export async function handleDelete(
                 }),
             );
 
-            void sendUpdate(
-                `### Removed\n**${trigger.name}**\n${trigger.description}`,
-                interaction.guild!,
-                'error',
+            fireAndForget(
+                sendUpdate(
+                    `### Removed\n**${trigger.name}**\n${trigger.description}`,
+                    interaction.guild!,
+                    'error',
+                ),
             );
         } else {
             await i.update(
@@ -118,8 +124,10 @@ export async function handleDelete(
 
     collector.on('end', () => {
         if (!handled) {
-            void interaction.editReply(
-                containerDisplay({ text: 'Interaction timed out' }),
+            fireAndForget(
+                interaction.editReply(
+                    containerDisplay({ text: 'Interaction timed out' }),
+                ),
             );
         }
     });

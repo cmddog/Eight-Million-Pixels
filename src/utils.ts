@@ -122,3 +122,7 @@ export async function log(
         allowedMentions: { parse: [] },
     });
 }
+
+export function fireAndForget(promise: Promise<unknown>) {
+    promise.catch(console.error);
+}

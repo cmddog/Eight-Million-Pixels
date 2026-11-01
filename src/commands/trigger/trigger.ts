@@ -15,6 +15,7 @@ import {
     buildContainer,
     buildTextDisplay,
     containerDisplay,
+    fireAndForget,
     getOrCreatePseudonym,
     log,
 } from '../../utils.js';
@@ -243,23 +244,27 @@ export async function insertTrigger(
         .values({ triggerName: name, userId: interaction.user.id });
 
     const pseudonym = await getOrCreatePseudonym(interaction.user.id);
-    void log(interaction.guild!, [
-        buildContainer({ color: 'primary' })
-            .addTextDisplayComponents(
-                buildTextDisplay('## Added New Trigger'),
-                buildTextDisplay(`**${name}**`),
-                buildTextDisplay(description),
-            )
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(
-                buildTextDisplay(`Added by ${pseudonym}`),
-            ),
-    ]);
+    fireAndForget(
+        log(interaction.guild!, [
+            buildContainer({ color: 'primary' })
+                .addTextDisplayComponents(
+                    buildTextDisplay('## Added New Trigger'),
+                    buildTextDisplay(`**${name}**`),
+                    buildTextDisplay(description),
+                )
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(
+                    buildTextDisplay(`Added by ${pseudonym}`),
+                ),
+        ]),
+    );
 
-    void sendUpdate(
-        `### Added\n**${name}**\n${description}`,
-        interaction.guild!,
-        'primary',
+    fireAndForget(
+        sendUpdate(
+            `### Added\n**${name}**\n${description}`,
+            interaction.guild!,
+            'primary',
+        ),
     );
 }
 
@@ -302,13 +307,15 @@ export function verifyAdmin(interaction: ChatInputCommandInteraction): boolean {
         PermissionFlagsBits.Administrator,
     );
     if (!hasAdmin) {
-        void interaction.reply(
-            containerDisplay(
-                {
-                    text: 'You need to be an Administrator to use this command',
-                    color: 'error',
-                },
-                MessageFlags.Ephemeral,
+        fireAndForget(
+            interaction.reply(
+                containerDisplay(
+                    {
+                        text: 'You need to be an Administrator to use this command',
+                        color: 'error',
+                    },
+                    MessageFlags.Ephemeral,
+                ),
             ),
         );
     }
