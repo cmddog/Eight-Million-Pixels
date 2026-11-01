@@ -4,18 +4,33 @@ import {
     SeparatorBuilder,
 } from 'discord.js';
 import { buildContainer, buildTextDisplay } from '../../utils.js';
+import { db } from '../../db/client.js';
+import { eq } from 'drizzle-orm';
+import { keyValue } from '../../db/schema.js';
 
 export async function handleHelp(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    return interaction.reply({
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    await interaction.deferReply({
+        flags: MessageFlags.Ephemeral,
+    });
+
+    const updateChannelExists = await db.query.keyValue.findFirst({
+        where: eq(keyValue.key, 'triggerUpdateChannelId'),
+    });
+
+    return interaction.editReply({
+        flags: MessageFlags.IsComponentsV2,
         components: [
             buildTextDisplay(
                 '# Trigger Warning System\n`/trigger` and its subcommands manage trigger warnings for members in this ' +
                     'server, letting anyone easily and mostly anonymously (more on this below) add and subscribe to ' +
-                    'triggers. If you frequent the server it is recommended to occasionally check the list.\n' +
-                    'Here is an explanation of what each command does:',
+                    'triggers. If you frequent the server it is recommended to' +
+                    (updateChannelExists
+                        ? `keep an eye on ${await interaction.guild!.channels.fetch(updateChannelExists.value)}`
+                        : 'occasionally check the list') +
+                    " and to be mindful of people's triggers by spoiling and tagging relevant imagery or topics accordingly." +
+                    '\nHere is an explanation of what each command does:',
             ),
             buildContainer({
                 text:
