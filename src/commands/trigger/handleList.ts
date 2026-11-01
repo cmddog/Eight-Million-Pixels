@@ -58,7 +58,7 @@ export async function handleList(
         else
             components.push(
                 buildTextDisplay(
-                    'This is a list of Triggers that one or more individuals in this server have regarding any content. ' +
+                    'This is a list of triggers that one or more individuals in this server have relating to any content. ' +
                         'If you post something in any gallery or discussion, please make sure it is spoilered (and you ' +
                         'specify what the trigger is) if it contains any of the following:',
                 ),
