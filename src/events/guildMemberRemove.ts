@@ -8,6 +8,7 @@ import {
     fireAndForget,
     log,
 } from '../utils.js';
+import { sendUpdate } from '../commands/trigger/trigger.js';
 
 export const name = Events.GuildMemberRemove;
 
@@ -32,6 +33,14 @@ export async function execute(member: GuildMember) {
         if (!trigger) continue;
 
         await db.delete(triggers).where(eq(triggers.name, trigger.name));
+
+        fireAndForget(
+            sendUpdate(
+                `### Removed\n**${trigger.name}**\n${trigger.description}`,
+                member.guild,
+                'error',
+            ),
+        );
 
         fireAndForget(
             log(member.guild, [
