@@ -15,12 +15,13 @@ import {
     fireAndForget,
 } from '../../utils.js';
 import type { PartialMessageOptions } from '../../types.js';
-import { nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
+import { nameEquals, sendUpdate } from '../trigger/trigger.js';
+import { verifyAdminOrOther } from './trigger-mod.js';
 
 export async function handleDelete(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    if (!verifyAdmin(interaction)) return;
+    if (!verifyAdminOrOther(interaction)) return;
     await interaction.deferReply();
 
     const name = interaction.options.getString('name', true);

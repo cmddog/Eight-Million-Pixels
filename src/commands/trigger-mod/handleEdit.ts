@@ -7,12 +7,11 @@ import {
     containerDisplay,
     fireAndForget,
 } from '../../utils.js';
-import { isValidName, nameEquals, sendUpdate, verifyAdmin } from './trigger.js';
+import { isValidName, nameEquals, sendUpdate } from '../trigger/trigger.js';
 
 export async function handleEdit(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    if (!verifyAdmin(interaction)) return;
     await interaction.deferReply();
 
     const name = interaction.options.getString('name', true).trim();

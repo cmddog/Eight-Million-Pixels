@@ -3,13 +3,11 @@ import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
 import { and, notInArray } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
-import { nameEquals, verifyAdmin } from './trigger.js';
+import { nameEquals } from '../trigger/trigger.js';
 
 export async function handleMerge(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    if (!verifyAdmin(interaction)) return;
-
     const sourceName = interaction.options.getString('source-name', true);
     const targetName = interaction.options.getString('target-name', true);
 

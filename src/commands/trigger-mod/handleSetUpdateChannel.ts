@@ -7,12 +7,13 @@ import {
 import { containerDisplay } from '../../utils.js';
 import { db } from '../../db/client.js';
 import { keyValue } from '../../db/schema.js';
-import { verifyAdmin } from './trigger.js';
+import { verifyAdminOrOther } from './trigger-mod.js';
 
 export async function handleSetUpdateChannel(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    if (!verifyAdmin(interaction)) return;
+    if (!verifyAdminOrOther(interaction, PermissionFlagsBits.ManageGuild))
+        return;
 
     const channel = interaction.options.getChannel('channel', true, [
         ChannelType.GuildText,

@@ -3,12 +3,12 @@ import { db } from '../../db/client.js';
 import { eq } from 'drizzle-orm';
 import { pseudonyms } from '../../db/schema.js';
 import { containerDisplay } from '../../utils.js';
-import { verifyAdmin } from './trigger.js';
+import { verifyAdminOrOther } from './trigger-mod.js';
 
 export async function handleGetUser(
     interaction: ChatInputCommandInteraction,
 ): Promise<unknown> {
-    if (!verifyAdmin(interaction)) return;
+    if (!verifyAdminOrOther(interaction)) return;
     await interaction.deferReply();
 
     const pseudonym = interaction.options.getString('pseudonym', true);

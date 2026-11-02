@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { db } from '../../db/client.js';
 import { keyValue, triggers, triggerSubscribers } from '../../db/schema.js';
-import { and, eq, like, sql, type SQL } from 'drizzle-orm';
+import { and, eq, sql, type SQL } from 'drizzle-orm';
 import {
     buildContainer,
     buildTextDisplay,
@@ -21,14 +21,10 @@ import {
 } from '../../utils.js';
 import { handleSubscribe } from './handleSubscribe.js';
 import { handleUnsubscribe } from './handleUnsubscribe.js';
-import { handleEdit } from './handleEdit.js';
-import { handleDelete } from './handleDelete.js';
-import { handleMerge } from './handleMerge.js';
-import { handleGetUser } from './handleGetUser.js';
 import { handleList } from './handleList.js';
 import { handleHelp } from './handleHelp.js';
-import { handleSetUpdateChannel } from './handleSetUpdateChannel.js';
 import type { AccentColor } from '../../types.js';
+import { triggerAutocomplete } from '../triggerAutocomplete/handleSharedAutocomplete.js';
 
 export const data = new SlashCommandBuilder()
     .setName('trigger')
@@ -76,101 +72,6 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand((sub) =>
         sub
-            .setName('edit')
-            .setDescription('Edit the name or description of a trigger')
-            .addStringOption((o) =>
-                o
-                    .setName('name')
-                    .setDescription('The current name of the trigger')
-                    .setAutocomplete(true)
-                    .setRequired(true),
-            )
-            .addStringOption((o) =>
-                o
-                    .setName('property')
-                    .setDescription(
-                        'Whether you want to edit the name or the description.',
-                    )
-                    .setChoices(
-                        {
-                            name: 'Name',
-                            value: 'name',
-                        },
-                        {
-                            name: 'Description',
-                            value: 'description',
-                        },
-                    )
-                    .setRequired(true),
-            )
-            .addStringOption((o) =>
-                o
-                    .setName('new-value')
-                    .setDescription('A new value for the name/description')
-                    .setMinLength(3)
-                    .setMaxLength(512)
-                    .setRequired(true),
-            )
-            .addBooleanOption((o) =>
-                o
-                    .setName('with-announcement')
-                    .setDescription(
-                        'Whether this edit should be announced in the trigger update channel',
-                    ),
-            ),
-    )
-    .addSubcommand((sub) =>
-        sub
-            .setName('delete')
-            .setDescription('Delete a specified trigger entirely')
-            .addStringOption((o) =>
-                o
-                    .setName('name')
-                    .setDescription('The trigger to delete')
-                    .setAutocomplete(true)
-                    .setRequired(true),
-            ),
-    )
-    .addSubcommand((sub) =>
-        sub
-            .setName('merge')
-            .setDescription('Used to merge duplicate triggers')
-            .addStringOption((o) =>
-                o
-                    .setName('source-name')
-                    .setDescription(
-                        'The name of the trigger to transfer the IDs FROM that will subsequently be deleted',
-                    )
-                    .setAutocomplete(true)
-                    .setRequired(true),
-            )
-            .addStringOption((o) =>
-                o
-                    .setName('target-name')
-                    .setDescription(
-                        'The name of the trigger to transfer the IDs TO that will remain',
-                    )
-                    .setAutocomplete(true)
-                    .setRequired(true),
-            ),
-    )
-    .addSubcommand((sub) =>
-        sub
-            .setName('get-user')
-            .setDescription(
-                'Fetches a user based on their pseudonym. Warning: Response is not ephemeral',
-            )
-            .addStringOption((o) =>
-                o
-                    .setName('pseudonym')
-                    .setDescription(
-                        'The pseudonym of the user you want to retrieve',
-                    )
-                    .setRequired(true),
-            ),
-    )
-    .addSubcommand((sub) =>
-        sub
             .setName('list')
             .setDescription('List all triggers')
             .addBooleanOption((o) =>
@@ -185,32 +86,13 @@ export const data = new SlashCommandBuilder()
             .setDescription(
                 'Displays an explanation of how the trigger system works.',
             ),
-    )
-    .addSubcommand((sub) =>
-        sub
-            .setName('set-update-channel')
-            .setDescription(
-                'Sets the channel that EMP should send updates about triggers in',
-            )
-            .addChannelOption((o) =>
-                o
-                    .setName('channel')
-                    .setDescription('The channel to send updates in')
-                    .addChannelTypes(ChannelType.GuildText)
-                    .setRequired(true),
-            ),
     );
 
 const handlers: Record<string, (i: ChatInputCommandInteraction) => unknown> = {
     subscribe: handleSubscribe,
     unsubscribe: handleUnsubscribe,
-    edit: handleEdit,
-    delete: handleDelete,
-    merge: handleMerge,
-    'get-user': handleGetUser,
     list: handleList,
     help: handleHelp,
-    'set-update-channel': handleSetUpdateChannel,
 };
 
 export async function execute(
@@ -222,15 +104,7 @@ export async function execute(
 export async function autocomplete(
     interaction: AutocompleteInteraction,
 ): Promise<unknown> {
-    const focused = interaction.options.getFocused();
-    const results = await db
-        .select({ name: triggers.name })
-        .from(triggers)
-        .where(like(triggers.name, `%${focused}%`))
-        .limit(25);
-    return interaction.respond(
-        results.map((r) => ({ name: r.name, value: r.name })),
-    );
+    return triggerAutocomplete(interaction);
 }
 
 export async function insertTrigger(
@@ -300,26 +174,6 @@ export function nameEquals(
     value: string,
 ): SQL {
     return sql`lower(${column}) = lower(${value})`;
-}
-
-export function verifyAdmin(interaction: ChatInputCommandInteraction): boolean {
-    const hasAdmin = interaction.memberPermissions?.has(
-        PermissionFlagsBits.Administrator,
-    );
-    if (!hasAdmin) {
-        fireAndForget(
-            interaction.reply(
-                containerDisplay(
-                    {
-                        text: 'You need to be an Administrator to use this command',
-                        color: 'error',
-                    },
-                    MessageFlags.Ephemeral,
-                ),
-            ),
-        );
-    }
-    return !!hasAdmin;
 }
 
 export async function sendUpdate(
