@@ -24,36 +24,24 @@ export const data = new SlashCommandBuilder()
             .setDescription('Edit the name or description of a trigger')
             .addStringOption((o) =>
                 o
-                    .setName('name')
+                    .setName('current-name')
                     .setDescription('The current name of the trigger')
                     .setAutocomplete(true)
                     .setRequired(true),
             )
             .addStringOption((o) =>
                 o
-                    .setName('property')
-                    .setDescription(
-                        'Whether you want to edit the name or the description.',
-                    )
-                    .setChoices(
-                        {
-                            name: 'Name',
-                            value: 'name',
-                        },
-                        {
-                            name: 'Description',
-                            value: 'description',
-                        },
-                    )
-                    .setRequired(true),
+                    .setName('new-name')
+                    .setDescription('The new name of the trigger')
+                    .setMinLength(3)
+                    .setMaxLength(20),
             )
             .addStringOption((o) =>
                 o
-                    .setName('new-value')
-                    .setDescription('A new value for the name/description')
-                    .setMinLength(3)
-                    .setMaxLength(512)
-                    .setRequired(true),
+                    .setName('new-description')
+                    .setDescription('The new description for the trigger')
+                    .setMinLength(10)
+                    .setMaxLength(512),
             )
             .addBooleanOption((o) =>
                 o
