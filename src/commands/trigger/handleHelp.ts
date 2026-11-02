@@ -54,10 +54,9 @@ export async function handleHelp(
             }),
             buildContainer({
                 text:
-                    '**Other subcommands**\n' +
-                    'All other subcommands are Admin-only and you can safely ignore them. If you think the wording of a ' +
-                    "trigger's description or name are unclear or should be adjusted for another reason, please let a " +
-                    'staff member know.',
+                    '**Editing Triggers**\n' +
+                    'To avoid abuse, only staff members may edit triggers after they have been created. If you believe ' +
+                    "a trigger's name or description should be adjusted for any reason, please let a staff member know.",
             }),
             new SeparatorBuilder(),
             buildTextDisplay(
