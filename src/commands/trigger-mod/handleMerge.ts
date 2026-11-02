@@ -1,9 +1,9 @@
 import { type ChatInputCommandInteraction, MessageFlags } from 'discord.js';
-import { containerDisplay } from '../../utils.js';
+import { containerDisplay, fireAndForget } from '../../utils.js';
 import { db } from '../../db/client.js';
 import { and, notInArray } from 'drizzle-orm';
 import { triggers, triggerSubscribers } from '../../db/schema.js';
-import { nameEquals } from '../trigger/trigger.js';
+import { nameEquals, sendUpdate } from '../trigger/trigger.js';
 
 export async function handleMerge(
     interaction: ChatInputCommandInteraction,
@@ -62,9 +62,17 @@ export async function handleMerge(
             ),
         );
     await db.delete(triggers).where(nameEquals(triggers.name, source.name));
+
+    fireAndForget(
+        sendUpdate(
+            `### Triggers merged\nTransferred subscribers from **${source.name}** to **${target.name}** and deleted **${source.name}**`,
+            interaction.guild!,
+        ),
+    );
+
     return interaction.editReply(
         containerDisplay({
-            text: `Transferred unique subscribers to **${targetName}** and deleted **${sourceName}**`,
+            text: `Transferred unique subscribers to **${target.name}** and deleted **${source.name}**`,
             color: 'primary',
         }),
     );
