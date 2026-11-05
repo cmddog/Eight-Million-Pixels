@@ -10,6 +10,7 @@ import {
 } from '../utils.js';
 import { sendUpdate } from '../commands/trigger/trigger.js';
 
+export const requiredIntents = ['GuildMembers'];
 export const name = Events.GuildMemberRemove;
 
 export async function execute(member: GuildMember) {

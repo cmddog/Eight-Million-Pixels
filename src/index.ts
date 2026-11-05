@@ -60,6 +60,14 @@ const eventFiles = fs
 for (const file of eventFiles) {
     const filePath = path.join(eventsPath, file);
     const event = await import(pathToFileURL(filePath).href);
+
+    if (event.requiredIntents && instanceConfig) {
+        const satisfied = event.requiredIntents.every((intent: string) =>
+            instanceConfig.intents?.includes(intent),
+        );
+        if (!satisfied) continue;
+    }
+
     if (event.once) {
         client.once(event.name, (...args) => event.execute(...args));
     } else {
