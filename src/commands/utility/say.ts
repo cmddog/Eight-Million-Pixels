@@ -45,6 +45,13 @@ export const data = new SlashCommandBuilder()
     )
     .addBooleanOption((o) =>
         o
+            .setName('ping-reply')
+            .setDescription(
+                'Whether the bot should ping with its reply. True by default, does nothing if not replying',
+            ),
+    )
+    .addBooleanOption((o) =>
+        o
             .setName('in-container')
             .setDescription(
                 'Whether the message should be sent in a container',
@@ -70,7 +77,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             ChannelType.GuildText,
         ]) ?? (interaction.channel as GuildTextBasedChannel);
     const replyToId = interaction.options.getString('reply-to');
-    const inContainer = interaction.options.getBoolean('in-container');
+    const shouldPing = interaction.options.getBoolean('ping-reply') ?? true;
+    const inContainer = interaction.options.getBoolean('in-container') ?? false;
     const color = interaction.options.getString('color') as
         AccentColor | undefined;
 
@@ -108,19 +116,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
     }
 
-    let sent;
-    if (!inContainer) {
-        sent = await channel.send({
-            content,
-            ...(replyToId && {
-                reply: { messageReference: replyToId, failIfNotExists: true },
-            }),
-        });
-    } else {
-        sent = await channel.send(
-            containerDisplay({ text: content, ...(color && { color }) }),
-        );
-    }
+    const sent = await channel.send({
+        ...(inContainer
+            ? containerDisplay({ text: content, ...(color && { color }) })
+            : { content }),
+        ...(replyToId && {
+            reply: { messageReference: replyToId, failIfNotExists: true },
+        }),
+        allowedMentions: { repliedUser: shouldPing },
+    });
 
     fireAndForget(
         log(interaction.guild!, [
