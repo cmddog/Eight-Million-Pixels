@@ -20,6 +20,16 @@ const __dirname = path.dirname(__filename);
 const foldersPath = path.join(__dirname, 'src/commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
+const instanceName = process.env.BOT_INSTANCE;
+const instanceConfig = instanceName
+    ? JSON.parse(
+          fs.readFileSync(
+              path.join(__dirname, `../instances/${instanceName}.json`),
+              'utf-8',
+          ),
+      )
+    : null;
+
 for (const folder of commandFolders) {
     const commandsPath = path.join(foldersPath, folder);
     const commandFiles = fs
@@ -31,7 +41,13 @@ for (const folder of commandFolders) {
         if (/[\/\\]handle/.test(filePath)) continue;
         const command = await import(pathToFileURL(filePath).href);
         if (isCommand(command)) {
-            commands.push(command.data.toJSON());
+            if (
+                !instanceConfig ||
+                instanceConfig.commands.includes('*') ||
+                instanceConfig.commands.includes(command.data.name)
+            ) {
+                commands.push(command.data.name, command);
+            }
         } else {
             console.log(
                 `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`,

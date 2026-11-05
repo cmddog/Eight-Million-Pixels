@@ -6,7 +6,8 @@
         "start": "tsx --env-file=.env src/index.ts",
         "start:test": "tsx --env-file=.env.test src/index.ts",
         "start:prod": "tsx src/index.ts",
-        "deploy": "tsx --env-file=.env deploy-commands.ts",
+        "deploy:emp": "tsx --env-file=.env.emp deploy-commands.ts",
+        "deploy:scava": "tsx --env-file=.env.scava deploy-commands.ts",
         "deploy:test": "tsx --env-file=.env.test deploy-commands.ts",
         "db:migrate": "drizzle-kit migrate"
     },

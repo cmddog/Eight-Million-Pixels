@@ -17,9 +17,11 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/eight-million-pixels
+            cd ~/rw-art-community-bots
             git pull
-            cat > .env <<'ENVEOF'
-            ${{ secrets.ENV_FILE }}
+            
+            cat > .env.emp <<'ENVEOF'
+            ${{ secrets.EMP_ENV }}
             ENVEOF
+            
             docker compose up --build -d

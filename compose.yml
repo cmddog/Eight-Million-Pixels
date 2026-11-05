@@ -1,10 +1,14 @@
+name: rw-art-community-bots
+
 services:
-  bot:
+  emp:
     build: .
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.emp
+    environment:
+      - BOT_INSTANCE=emp
     volumes:
-      - bot-data:/app/data
+      - emp-data:/app/data
 
 volumes:
-  bot-data:
+  emp-data:
