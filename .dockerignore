@@ -1,6 +1,5 @@
 node_modules
 .git
-.env.emp
-.env.test
+.env.*
 data
 .idea
