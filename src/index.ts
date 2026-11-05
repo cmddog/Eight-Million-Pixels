@@ -7,16 +7,8 @@ import { db } from './db/client.js';
 import { eq } from 'drizzle-orm';
 import { keyValue } from './db/schema.js';
 
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
-});
-
-client.commands = new Collection();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const foldersPath = path.join(__dirname, 'commands');
-const commandFolders = fs.readdirSync(foldersPath);
-
 const instanceName = process.env.BOT_INSTANCE;
 const instanceConfig = instanceName
     ? JSON.parse(
@@ -26,6 +18,21 @@ const instanceConfig = instanceName
           ),
       )
     : null;
+
+const intentMap: Record<string, GatewayIntentBits> = {
+    Guilds: GatewayIntentBits.Guilds,
+    GuildMembers: GatewayIntentBits.GuildMembers,
+};
+
+const intents = instanceConfig?.intents
+    ? instanceConfig.intents.map((i: string) => intentMap[i])
+    : [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
+
+const client = new Client({ intents });
+
+client.commands = new Collection();
+const foldersPath = path.join(__dirname, 'commands');
+const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
     const commandsPath = path.join(foldersPath, folder);
