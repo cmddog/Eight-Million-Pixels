@@ -24,4 +24,8 @@ jobs:
             ${{ secrets.EMP_ENV }}
             ENVEOF
             
+            cat > .env.scava <<'ENVEOF'
+            ${{ secrets.SCAVA_ENV }}
+            ENVEOF
+            
             docker compose up --build -d

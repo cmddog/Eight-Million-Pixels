@@ -10,5 +10,15 @@ services:
     volumes:
       - emp-data:/app/data
 
+  scava:
+    build: .
+    restart: unless-stopped
+    env_file: .env.scava
+    environment:
+      - BOT_INSTANCE=scava
+    volumes:
+      - scava-data:/app/data
+
 volumes:
   emp-data:
+  scava-data:

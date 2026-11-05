@@ -21,7 +21,7 @@ const instanceName = process.env.BOT_INSTANCE;
 const instanceConfig = instanceName
     ? JSON.parse(
           fs.readFileSync(
-              path.join(__dirname, `../instances/${instanceName}.json`),
+              path.join(__dirname, `./instances/${instanceName}.json`),
               'utf-8',
           ),
       )

@@ -24,7 +24,7 @@ const instanceName = process.env.BOT_INSTANCE;
 const instanceConfig = instanceName
     ? JSON.parse(
           fs.readFileSync(
-              path.join(__dirname, `../instances/${instanceName}.json`),
+              path.join(__dirname, `./instances/${instanceName}.json`),
               'utf-8',
           ),
       )
@@ -46,7 +46,7 @@ for (const folder of commandFolders) {
                 instanceConfig.commands.includes('*') ||
                 instanceConfig.commands.includes(command.data.name)
             ) {
-                commands.push(command.data.name, command);
+                commands.push(command.data.toJSON());
             }
         } else {
             console.log(
